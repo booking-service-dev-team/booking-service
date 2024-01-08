@@ -26,6 +26,14 @@ jobs:
           distribution: 'adopt'
           cache: maven
       - name: Wait for PostgreSQL
-        run: docker exec postgres pg_isready --dbname=booking_db
+        id: wait-for-postgres
+        run: echo "Waiting for PostgreSQL to be ready..." && sleep 20
+      - name: Check PostgreSQL readiness
+        run: |
+          until docker exec postgres pg_isready --dbname=booking_db; do
+            echo "PostgreSQL is not ready yet - sleeping"
+            sleep 5
+          done
+        if: steps.wait-for-postgres.outputs.result == 'success'
       - name: Build with Maven
         run: mvn --batch-mode --update-snapshots verify
