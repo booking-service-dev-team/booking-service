@@ -6,6 +6,17 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_DB: booking_db
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: 1111
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
     steps:
       - uses: actions/checkout@v2
       - name: Set up JDK 17
@@ -14,5 +25,15 @@ jobs:
           java-version: '17'
           distribution: 'adopt'
           cache: maven
+      - name: Wait for PostgreSQL
+        id: wait-for-postgres
+        run: echo "Waiting for PostgreSQL to be ready..." && sleep 20
+      - name: Check PostgreSQL readiness
+        run: |
+          until docker exec postgres pg_isready --dbname=booking_db; do
+            echo "PostgreSQL is not ready yet - sleeping"
+            sleep 5
+          done
+        if: steps.wait-for-postgres.outputs.result == 'success'
       - name: Build with Maven
         run: mvn --batch-mode --update-snapshots verify
