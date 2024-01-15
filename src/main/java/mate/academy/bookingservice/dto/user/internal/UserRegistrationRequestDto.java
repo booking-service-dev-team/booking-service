@@ -1,5 +1,6 @@
 package mate.academy.bookingservice.dto.user.internal;
 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -12,6 +13,7 @@ import mate.academy.bookingservice.validation.FieldMatch;
 public class UserRegistrationRequestDto {
     @NotBlank
     @Size(min = 8, max = 50)
+    @Email
     private String email;
 
     @NotBlank
