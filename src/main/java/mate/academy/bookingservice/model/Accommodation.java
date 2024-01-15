@@ -45,7 +45,6 @@ public class Accommodation {
     P.S. Additionally, for the proper addition of "amenities" to a separate table, the use of
     the Levenshtein algorithm can be implemented.
      */
-    // todo
     @Column(name = "amenities")
     private String amenities;
     @Column(name = "price_per_month_usd")

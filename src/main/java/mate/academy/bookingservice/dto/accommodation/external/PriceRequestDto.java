@@ -1,10 +1,9 @@
 package mate.academy.bookingservice.dto.accommodation.external;
 
-import java.math.BigDecimal;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import java.math.BigDecimal;
 import lombok.Data;
-import lombok.experimental.Accessors;
 
 @Data
 public class PriceRequestDto {

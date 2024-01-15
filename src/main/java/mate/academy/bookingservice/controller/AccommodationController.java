@@ -1,9 +1,9 @@
 package mate.academy.bookingservice.controller;
 
-import java.util.List;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import mate.academy.bookingservice.dto.accommodation.external.AvailabilityRequestDto;
 import mate.academy.bookingservice.dto.accommodation.external.CreateAccommodationRequestDto;

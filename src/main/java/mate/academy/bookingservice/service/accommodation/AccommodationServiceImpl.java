@@ -79,8 +79,8 @@ public class AccommodationServiceImpl implements AccommodationService {
     @Transactional
     public void updatePrice(PriceRequestDto requestDto, Long id) {
         Accommodation accommodation = accommodationRepository.findById(id).orElseThrow(
-                () -> new EntityNotFoundException("Can't find accommodation for update price by id: "
-                        + id)
+                () -> new EntityNotFoundException(
+                        "Can't find accommodation for update price by id: " + id)
         );
         accommodation.setPricePerMonthUsd(requestDto.getPricePerMonthUsd());
         accommodationRepository.save(accommodation);
@@ -90,10 +90,11 @@ public class AccommodationServiceImpl implements AccommodationService {
     @Transactional
     public void updateAvailability(AvailabilityRequestDto requestDto, Long id) {
         Accommodation accommodation = accommodationRepository.findById(id).orElseThrow(
-                () -> new EntityNotFoundException("Can't find accommodation for update availability by id: "
-                        + id)
+                () -> new EntityNotFoundException(
+                        "Can't find accommodation for update availability by id: " + id)
         );
-        accommodation.setNumberOfAvailableAccommodation(requestDto.getNumberOfAvailableAccommodation());
+        accommodation.setNumberOfAvailableAccommodation(requestDto
+                .getNumberOfAvailableAccommodation());
         accommodationRepository.save(accommodation);
     }
 
@@ -101,8 +102,8 @@ public class AccommodationServiceImpl implements AccommodationService {
     @Transactional
     public void updateAddress(AddressRequestDto requestDto, Long id) {
         Accommodation accommodation = accommodationRepository.findById(id).orElseThrow(
-                () -> new EntityNotFoundException("Can't find accommodation for update address by id: "
-                        + id)
+                () -> new EntityNotFoundException(
+                        "Can't find accommodation for update address by id: " + id)
         );
         Address address = new Address()
                 .setCountryName(requestDto.getCountryName())
