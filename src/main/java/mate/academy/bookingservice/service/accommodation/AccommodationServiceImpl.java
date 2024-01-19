@@ -10,7 +10,7 @@ import mate.academy.bookingservice.dto.accommodation.external.PriceRequestDto;
 import mate.academy.bookingservice.dto.accommodation.internal.AccommodationDto;
 import mate.academy.bookingservice.dto.address.external.AddressRequestDto;
 import mate.academy.bookingservice.exception.EntityNotFoundException;
-import mate.academy.bookingservice.exception.IllegalAccommodationTypeArgument;
+import mate.academy.bookingservice.exception.IllegalArgumentException;
 import mate.academy.bookingservice.mapper.AccommodationMapper;
 import mate.academy.bookingservice.model.Accommodation;
 import mate.academy.bookingservice.model.Address;
@@ -38,15 +38,9 @@ public class AccommodationServiceImpl implements AccommodationService {
         Address savedAddress = addressRepository.save(address);
         Accommodation accommodation = new Accommodation();
         accommodation.setAddress(savedAddress);
-        try {
-            accommodation.setType(Accommodation.Type.valueOf(requestDto.getTypeName()));
-        } catch (Exception e) {
-            throw new IllegalAccommodationTypeArgument("Incorrect value of accommodation type: "
-                    + requestDto.getTypeName()
-                    + ", use one of: " + Arrays.toString(Accommodation.Type.values()));
-        }
+        accommodation.setType(findAccommodationTypeValueByTypeName(requestDto.getTypeName()));
         accommodation.setAmenities(requestDto.getAmenities());
-        accommodation.setSizeOfAccommodation(String.valueOf(requestDto.getSizeOfAccommodation()));
+        accommodation.setSizeOfAccommodation(requestDto.getSizeOfAccommodation());
         accommodation.setPricePerMonthUsd(requestDto.getPricePerMonthUsd());
         accommodation.setNumberOfAvailableAccommodation(requestDto
                 .getNumberOfAvailableAccommodation());
@@ -69,19 +63,13 @@ public class AccommodationServiceImpl implements AccommodationService {
 
     @Override
     public AccommodationDto getById(Long id) {
-        return accommodationMapper.toDto(accommodationRepository.findById(id)
-                .orElseThrow(
-                        () -> new EntityNotFoundException("Can't find accommodation by id: " + id)
-                ));
+        return accommodationMapper.toDto(findAccommodationById(id));
     }
 
     @Override
     @Transactional
     public void updatePrice(PriceRequestDto requestDto, Long id) {
-        Accommodation accommodation = accommodationRepository.findById(id).orElseThrow(
-                () -> new EntityNotFoundException(
-                        "Can't find accommodation for update price by id: " + id)
-        );
+        Accommodation accommodation = findAccommodationById(id);
         accommodation.setPricePerMonthUsd(requestDto.getPricePerMonthUsd());
         accommodationRepository.save(accommodation);
     }
@@ -89,10 +77,7 @@ public class AccommodationServiceImpl implements AccommodationService {
     @Override
     @Transactional
     public void updateAvailability(AvailabilityRequestDto requestDto, Long id) {
-        Accommodation accommodation = accommodationRepository.findById(id).orElseThrow(
-                () -> new EntityNotFoundException(
-                        "Can't find accommodation for update availability by id: " + id)
-        );
+        Accommodation accommodation = findAccommodationById(id);
         accommodation.setNumberOfAvailableAccommodation(requestDto
                 .getNumberOfAvailableAccommodation());
         accommodationRepository.save(accommodation);
@@ -101,10 +86,7 @@ public class AccommodationServiceImpl implements AccommodationService {
     @Override
     @Transactional
     public void updateAddress(AddressRequestDto requestDto, Long id) {
-        Accommodation accommodation = accommodationRepository.findById(id).orElseThrow(
-                () -> new EntityNotFoundException(
-                        "Can't find accommodation for update address by id: " + id)
-        );
+        Accommodation accommodation = findAccommodationById(id);
         Address address = new Address()
                 .setCountryName(requestDto.getCountryName())
                 .setCityName(requestDto.getCityName())
@@ -118,5 +100,25 @@ public class AccommodationServiceImpl implements AccommodationService {
     @Override
     public void deleteById(Long id) {
         accommodationRepository.deleteById(id);
+    }
+
+    private Accommodation findAccommodationById(Long id) {
+        return accommodationRepository.findById(id).orElseThrow(
+                () -> new EntityNotFoundException(
+                        "Can't find accommodation by id: " + id)
+        );
+    }
+
+    private Accommodation.Type findAccommodationTypeValueByTypeName(String typeName)
+            throws IllegalArgumentException {
+        if (Arrays.stream(Accommodation.Type.values())
+                .map(String::valueOf)
+                .noneMatch(s -> s.equals(typeName.toUpperCase()))) {
+            throw new IllegalArgumentException("Incorrect value of accommodation type "
+                    + typeName
+                    + ", use one of:" + Arrays.toString(Accommodation.Type.values()));
+        } else {
+            return Accommodation.Type.valueOf(typeName.toUpperCase());
+        }
     }
 }

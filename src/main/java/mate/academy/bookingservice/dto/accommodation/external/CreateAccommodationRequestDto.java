@@ -5,8 +5,6 @@ import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import lombok.Data;
 import lombok.experimental.Accessors;
-import mate.academy.bookingservice.model.Accommodation;
-import mate.academy.bookingservice.validation.AccommodationType;
 
 @Data
 @Accessors(chain = true)
@@ -23,7 +21,9 @@ public class CreateAccommodationRequestDto {
     @NotNull
     @Min(0)
     private BigDecimal pricePerMonthUsd;
-    @AccommodationType(enumClass = Accommodation.Type.class)
+    @NotNull
     private String typeName;
+    @NotNull
+    @Min(0)
     private Integer numberOfAvailableAccommodation;
 }

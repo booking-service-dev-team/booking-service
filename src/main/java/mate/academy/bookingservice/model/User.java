@@ -41,8 +41,8 @@ public class User implements UserDetails {
     private boolean isDeleted;
 
     public enum Role {
-        ADMIN,
-        CUSTOMER
+        ROLE_ADMIN,
+        ROLE_CUSTOMER
     }
 
     @Override

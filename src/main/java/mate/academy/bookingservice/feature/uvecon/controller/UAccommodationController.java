@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
         description = "Endpoints for uvecon accommodation management."
                 + "By default, it is intended for work with apartments in Ukraine.")
 @RestController
-@RequestMapping("/uvecon/accommodation")
+@RequestMapping("/uvecon/accommodations")
 @RequiredArgsConstructor
 public class UAccommodationController {
     private final UveconApartmentAccommodationService accommodationService;

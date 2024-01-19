@@ -32,8 +32,8 @@ public class UserController {
 
     @PutMapping("/{id}/role")
     @Operation(summary = "User role update", description = "Enables users to update their roles, "
-            + "you can specify ADMIN or CUSTOMER, "
-            + "role by default = CUSTOMER")
+            + "you can specify ROLE_ADMIN or ROLE_CUSTOMER, "
+            + "role by default = ROLE_CUSTOMER")
     public UserResponseDto updateUsersRole(@PathVariable Long id,
                                                @RequestBody RoleRequestDto roleRequestDto) {
         return userService.updateUsersRole(id, roleRequestDto);
