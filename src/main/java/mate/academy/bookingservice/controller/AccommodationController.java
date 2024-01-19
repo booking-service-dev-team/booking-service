@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Accommodation management",
         description = "Endpoints for managing accommodations.")
 @RestController
-@RequestMapping("/accommodation")
+@RequestMapping("/accommodations")
 @RequiredArgsConstructor
 public class AccommodationController {
     private final AccommodationService accommodationService;
@@ -36,7 +36,7 @@ public class AccommodationController {
     @Operation(summary = "Create new accommodation",
             description = "Create new accommodation")
     public AccommodationDto createAccommodation(
-            @RequestBody CreateAccommodationRequestDto requestDto
+            @RequestBody @Valid CreateAccommodationRequestDto requestDto
     ) {
         return accommodationService.save(requestDto);
     }
@@ -45,7 +45,7 @@ public class AccommodationController {
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Create all accommodations",
             description = "Saves several accommodations to the database")
-    public String saveAll(@RequestBody CreateAccommodationRequestDto[] requestDtos) {
+    public String saveAll(@RequestBody @Valid CreateAccommodationRequestDto[] requestDtos) {
         return accommodationService.saveAll(requestDtos);
     }
 
@@ -59,8 +59,8 @@ public class AccommodationController {
 
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    @Operation(summary = "Get a accommodation by id",
-            description = "Get a accommodation by id")
+    @Operation(summary = "Get an accommodation by id",
+            description = "Get an accommodation by id")
     public AccommodationDto getAccommodationById(@PathVariable Long id) {
         return accommodationService.getById(id);
     }

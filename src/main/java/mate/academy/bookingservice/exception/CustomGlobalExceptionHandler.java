@@ -53,13 +53,23 @@ public class CustomGlobalExceptionHandler extends ResponseEntityExceptionHandler
         return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(IllegalAccommodationTypeArgument.class)
+    @ExceptionHandler(IllegalArgumentException.class)
     protected ResponseEntity<Object> handleIncorrectTypeArgument(
-            IllegalAccommodationTypeArgument ex) {
+            IllegalArgumentException ex) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("timestamp", LocalDateTime.now());
         body.put("status", HttpStatus.BAD_REQUEST);
-        body.put("error", "Unable to create accommodation : " + ex.getMessage());
+        body.put("error", "Unable to continue : " + ex.getMessage());
+        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(InvalidDateException.class)
+    protected ResponseEntity<Object> handleInvalidDateForBooking(
+            InvalidDateException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", HttpStatus.BAD_REQUEST);
+        body.put("error", "Unable to create booking: " + ex.getMessage());
         return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
     }
 
