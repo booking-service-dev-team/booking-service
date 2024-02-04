@@ -47,13 +47,18 @@ public class BookingController {
     @GetMapping("/")
     @ResponseStatus(HttpStatus.OK)
     @PreAuthorize("hasRole('ROLE_ADMIN')")
-    @Operation(summary = "Get a booking by user id and booking status",
+    @Operation(summary = "Get a bookings by user id and/or booking statusName",
             description = "Allows a user with administrator rights to retrieve "
-                    + "a specific booking with the specified status by user ID")
+                    + "bookings by user ID and specified status name "
+                    + "or only by status name")
     public List<BookingDto> getBookingsByUserIdAndStatus(
-            @RequestParam(name = "user_id") Long userId,
-            @RequestParam(name = "status") String status) {
-        return bookingService.getBookingsByUserIdAndStatus(userId, status);
+            @RequestParam(name = "user_id", required = false) Long userId,
+            @RequestParam(name = "status") String statusName) {
+        if (userId == null) {
+            return bookingService.getBookingsByStatus(statusName);
+        } else {
+            return bookingService.getBookingsByUserIdAndStatus(userId, statusName);
+        }
     }
 
     @GetMapping("/my")
@@ -66,6 +71,7 @@ public class BookingController {
 
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Operation(summary = "Get a booking by id",
             description = "Get a booking by id")
     public BookingDto getBookingById(@PathVariable Long id) {
@@ -76,6 +82,7 @@ public class BookingController {
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "Update a booking by id",
             description = "Update a booking by id")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public BookingDto updateBookingById(@PathVariable Long id,
                                         @RequestBody UpdateBookingRequestDto requestDto) {
         return bookingService.updateBookingById(id, requestDto);
@@ -83,6 +90,7 @@ public class BookingController {
 
     @PatchMapping("/{id}/status")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Operation(summary = "Update a status of booking by id",
             description = "Allows you to update only the status")
     public BookingDto updateStatus(@PathVariable Long id,
@@ -93,6 +101,7 @@ public class BookingController {
     @Operation(summary = "Delete a booking by id",
             description = "Soft delete a booking by id")
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteById(@PathVariable Long id) {
         bookingService.deleteById(id);
