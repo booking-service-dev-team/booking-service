@@ -13,6 +13,7 @@ import mate.academy.bookingservice.dto.address.external.AddressRequestDto;
 import mate.academy.bookingservice.service.accommodation.AccommodationService;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -33,6 +34,7 @@ public class AccommodationController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Operation(summary = "Create new accommodation",
             description = "Create new accommodation")
     public AccommodationDto createAccommodation(
@@ -43,6 +45,7 @@ public class AccommodationController {
 
     @PostMapping("/save-all")
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Operation(summary = "Create all accommodations",
             description = "Saves several accommodations to the database")
     public String saveAll(@RequestBody @Valid CreateAccommodationRequestDto[] requestDtos) {
@@ -69,6 +72,7 @@ public class AccommodationController {
             description = "Accommodation price update by id")
     @PatchMapping("/{id}/price")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public void updatePrice(@RequestBody @Valid PriceRequestDto requestDto,
                                         @PathVariable Long id) {
         accommodationService.updatePrice(requestDto, id);
@@ -78,6 +82,7 @@ public class AccommodationController {
             description = "Accommodation availability update by id")
     @PatchMapping("/{id}/availability")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public void updateAvailability(@RequestBody @Valid AvailabilityRequestDto requestDto,
                             @PathVariable Long id) {
         accommodationService.updateAvailability(requestDto, id);
@@ -87,6 +92,7 @@ public class AccommodationController {
             description = "Accommodation address update by id. "
                     + "The country, city, street and house number should be indicated")
     @PatchMapping("/{id}/address")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @ResponseStatus(HttpStatus.OK)
     public void updateAddress(@RequestBody @Valid AddressRequestDto requestDto,
                                    @PathVariable Long id) {
@@ -96,6 +102,7 @@ public class AccommodationController {
     @Operation(summary = "Delete an accommodation by id",
             description = "Soft delete an accommodation by id")
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteById(@PathVariable Long id) {
         accommodationService.deleteById(id);

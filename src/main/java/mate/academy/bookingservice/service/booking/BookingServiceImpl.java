@@ -35,13 +35,26 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @Transactional
     public BookingDto save(CreateBookingRequestDto requestDto, Authentication authentication) {
-        checkDates(requestDto.getCheckInDate(), requestDto.getCheckOutDate());
+        checkingAvailabilityOfDates(requestDto.getCheckInDate(),
+                requestDto.getCheckOutDate(),
+                requestDto.getAccommodationId());
+        Accommodation accommodation = findAccommodationById(requestDto
+                .getAccommodationId(), "create");
+        if (accommodation.getNumberOfAvailableAccommodation() > 0) {
+            accommodation.setNumberOfAvailableAccommodation(
+                    accommodation.getNumberOfAvailableAccommodation() - 1
+            );
+        } else {
+            throw new InvalidDateException("Accommodation isn't available");
+        }
+        Accommodation savedAccommodation = accommodationRepository.save(accommodation);
         Booking booking = new Booking()
                 .setCheckInDate(requestDto.getCheckInDate())
                 .setCheckOutDate(requestDto.getCheckOutDate())
-                .setAccommodation(findAccommodationById(requestDto.getAccommodationId(), "create"))
+                .setAccommodation(savedAccommodation)
                 .setUser(getUserByAuthentication(authentication))
                 .setStatus(Booking.Status.PENDING);
+
         Booking savedBooking = bookingRepository.save(booking);
         return bookingMapper.toDto(savedBooking);
     }
@@ -52,6 +65,16 @@ public class BookingServiceImpl implements BookingService {
         return bookingRepository
                 .getBookingsByUserAndStatus(findUserById(userId),
                         findBookingStatusValueByStatusName(statusName))
+                .stream()
+                .map(bookingMapper::toDto)
+                .toList();
+    }
+
+    @Override
+    @SneakyThrows
+    public List<BookingDto> getBookingsByStatus(String statusName) {
+        return bookingRepository
+                .getBookingsByStatus(findBookingStatusValueByStatusName(statusName))
                 .stream()
                 .map(bookingMapper::toDto)
                 .toList();
@@ -77,7 +100,9 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @SneakyThrows
     public BookingDto updateBookingById(Long id, UpdateBookingRequestDto requestDto) {
-        checkDates(requestDto.getCheckInDate(), requestDto.getCheckOutDate());
+        checkingAvailabilityOfDates(requestDto.getCheckInDate(),
+                requestDto.getCheckOutDate(),
+                requestDto.getAccommodationId());
         Booking booking = new Booking()
                 .setId(id)
                 .setCheckInDate(requestDto.getCheckInDate())
@@ -141,9 +166,32 @@ public class BookingServiceImpl implements BookingService {
         );
     }
 
-    private void checkDates(LocalDate checkIn, LocalDate checkOut) throws InvalidDateException {
+    private void checkingAvailabilityOfDates(
+            LocalDate checkIn, LocalDate checkOut, Long accommodationId
+    )
+            throws InvalidDateException {
         if (checkIn.isAfter(checkOut) || checkIn.isBefore(LocalDate.now())) {
             throw new InvalidDateException("Invalid date range");
         }
+        List<Booking> bookings = findBookingsByAccommodationIdAndStatus(accommodationId,
+                Booking.Status.CONFIRMED);
+        for (Booking booking : bookings) {
+            if (isDateInRange(checkIn, booking.getCheckInDate(), booking.getCheckOutDate())) {
+                throw new InvalidDateException("This date isn't available: " + checkIn);
+            }
+            if (isDateInRange(checkOut, booking.getCheckInDate(), booking.getCheckOutDate())) {
+                throw new InvalidDateException("This date isn't available: " + checkOut);
+            }
+        }
+    }
+
+    private List<Booking> findBookingsByAccommodationIdAndStatus(
+            Long accommodationId, Booking.Status status) {
+        return bookingRepository
+                .findBookingsByAccommodationIdAndStatus(accommodationId, status);
+    }
+
+    private boolean isDateInRange(LocalDate dateToCheck, LocalDate startDate, LocalDate endDate) {
+        return dateToCheck.isAfter(startDate) && dateToCheck.isBefore(endDate);
     }
 }

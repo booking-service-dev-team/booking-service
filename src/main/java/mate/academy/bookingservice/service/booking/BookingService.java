@@ -21,4 +21,6 @@ public interface BookingService {
     BookingDto updateBookingStatusById(Long id, StatusBookingRequestDto requestDto);
 
     void deleteById(Long id);
+
+    List<BookingDto> getBookingsByStatus(String status);
 }
