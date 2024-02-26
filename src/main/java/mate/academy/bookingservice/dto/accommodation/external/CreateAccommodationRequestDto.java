@@ -20,7 +20,7 @@ public class CreateAccommodationRequestDto {
     private String amenities;
     @NotNull
     @Min(0)
-    private BigDecimal pricePerMonthUsd;
+    private BigDecimal pricePerDayUsd;
     @NotNull
     private String typeName;
     @NotNull

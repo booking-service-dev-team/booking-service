@@ -7,3 +7,5 @@ databaseChangeLog:
       file: db/changelog/changes/03-create-accommodations-table.yml
   - include:
       file: db/changelog/changes/04-create-bookings-table.yml
+  - include:
+      file: db/changelog/changes/05-create-payments-table.yml

@@ -41,7 +41,7 @@ public class AccommodationServiceImpl implements AccommodationService {
         accommodation.setType(findAccommodationTypeValueByTypeName(requestDto.getTypeName()));
         accommodation.setAmenities(requestDto.getAmenities());
         accommodation.setSizeOfAccommodation(requestDto.getSizeOfAccommodation());
-        accommodation.setPricePerMonthUsd(requestDto.getPricePerMonthUsd());
+        accommodation.setPricePerDayUsd(requestDto.getPricePerDayUsd());
         accommodation.setNumberOfAvailableAccommodation(requestDto
                 .getNumberOfAvailableAccommodation());
         return accommodationMapper.toDto(accommodationRepository.save(accommodation));
@@ -70,7 +70,7 @@ public class AccommodationServiceImpl implements AccommodationService {
     @Transactional
     public void updatePrice(PriceRequestDto requestDto, Long id) {
         Accommodation accommodation = findAccommodationById(id);
-        accommodation.setPricePerMonthUsd(requestDto.getPricePerMonthUsd());
+        accommodation.setPricePerDayUsd(requestDto.getPricePerDayUsd());
         accommodationRepository.save(accommodation);
     }
 

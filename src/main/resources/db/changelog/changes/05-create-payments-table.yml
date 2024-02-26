@@ -1,10 +1,10 @@
 databaseChangeLog:
   - changeSet:
-      id: 03-create-accommodations-table
+      id: 05-create-payments-table
       author: denis
       changes:
         - createTable:
-            tableName: accommodations
+            tableName: payments
             columns:
               - column:
                   name: id
@@ -14,27 +14,31 @@ databaseChangeLog:
                     primaryKey: true
                     nullable: false
               - column:
-                  name: address_id
+                  name: status
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: booking_id
                   type: bigint
                   constraints:
                     nullable: false
               - column:
-                  name: type
+                  name: session_url
                   type: varchar(255)
+                  constraints:
+                    nullable: false
               - column:
-                  name: size_of_accommodation
+                  name: session_id
                   type: varchar(255)
+                  constraints:
+                    nullable: false
               - column:
                   name: amenities
                   type: varchar(255)
               - column:
-                  name: price_per_day_usd
+                  name: amount_to_pay_usd
                   type: decimal(10, 2)
-                  constraints:
-                    nullable: false
-              - column:
-                  name: number_of_available_accommodation
-                  type: int
                   constraints:
                     nullable: false
               - column:
@@ -44,10 +48,10 @@ databaseChangeLog:
                   constraints:
                     nullable: false
         - addForeignKeyConstraint:
-            baseTableName: accommodations
-            baseColumnNames: address_id
-            constraintName: fk_accommodations_addresses
-            referencedTableName: addresses
+            baseTableName: payments
+            baseColumnNames: booking_id
+            constraintName: fk_payments_bookings
+            referencedTableName: bookings
             referencedColumnNames: id
             onUpdate: CASCADE
             onDelete: CASCADE

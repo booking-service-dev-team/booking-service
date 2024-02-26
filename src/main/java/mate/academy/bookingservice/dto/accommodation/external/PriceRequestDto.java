@@ -9,5 +9,5 @@ import lombok.Data;
 public class PriceRequestDto {
     @NotNull
     @Min(0)
-    private BigDecimal pricePerMonthUsd;
+    private BigDecimal pricePerDayUsd;
 }
