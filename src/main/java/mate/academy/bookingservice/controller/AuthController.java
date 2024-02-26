@@ -1,5 +1,9 @@
 package mate.academy.bookingservice.controller;
 
+import com.stripe.Stripe;
+import com.stripe.exception.StripeException;
+import com.stripe.model.Customer;
+import com.stripe.param.CustomerCreateParams;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -11,6 +15,7 @@ import mate.academy.bookingservice.dto.user.internal.UserRegistrationRequestDto;
 import mate.academy.bookingservice.exception.RegistrationException;
 import mate.academy.bookingservice.security.AuthenticationService;
 import mate.academy.bookingservice.service.user.UserService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,12 +29,14 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
     private final UserService userService;
     private final AuthenticationService authenticationService;
+    @Value("${stripe.api.key}")
+    private String stripeApiKey;
 
     @Operation(summary = "Create a new user", description = "Create a new user")
     @PostMapping("/register")
     public UserResponseDto register(
             @RequestBody @Valid UserRegistrationRequestDto registrationRequestDto
-    ) throws RegistrationException {
+    ) throws RegistrationException, StripeException {
         return userService.registration(registrationRequestDto);
     }
 

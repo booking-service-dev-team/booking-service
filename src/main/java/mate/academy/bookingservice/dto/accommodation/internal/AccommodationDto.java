@@ -11,6 +11,6 @@ public class AccommodationDto {
     private AddressDto address;
     private String sizeOfAccommodation;
     private String amenities;
-    private BigDecimal pricePerMonthUsd;
+    private BigDecimal pricePerDayUsd;
     private Integer numberOfAvailableAccommodation;
 }
