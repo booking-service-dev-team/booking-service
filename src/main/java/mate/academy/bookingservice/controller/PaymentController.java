@@ -30,8 +30,8 @@ public class PaymentController {
     public void initPaymentSession (
             Authentication authentication, @RequestBody CreatePaymentRequestDto requestDto
     ) throws MalformedURLException, StripeException {
-        User user = (User) authentication.getPrincipal();
-        paymentService.initPaymentSession(user.getEmail(), requestDto.getBookingId());
+//        User user = (User) authentication.getPrincipal();
+        paymentService.initPaymentSession(authentication.getName(), requestDto.getBookingId());
 //        return new InitPaymentSessionResultDto();
     }
 

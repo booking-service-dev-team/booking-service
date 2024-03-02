@@ -40,13 +40,15 @@ public class BookingServiceImpl implements BookingService {
                 requestDto.getAccommodationId());
         Accommodation accommodation = findAccommodationById(requestDto
                 .getAccommodationId(), "create");
-        if (accommodation.getNumberOfAvailableAccommodation() > 0) {
-            accommodation.setNumberOfAvailableAccommodation(
-                    accommodation.getNumberOfAvailableAccommodation() - 1
-            );
-        } else {
-            throw new InvalidDateException("Accommodation isn't available");
-        }
+        // todo create logic for check availability and reduction availability.
+        //  maybe reduction availability should doing with change status on CONFIRMED after user payment)
+//        if (accommodation.getNumberOfAvailableAccommodation() > 0) {
+//            accommodation.setNumberOfAvailableAccommodation(
+//                    accommodation.getNumberOfAvailableAccommodation() - 1
+//            );
+//        } else {
+//            throw new InvalidDateException("Accommodation isn't available");
+//        }
         Accommodation savedAccommodation = accommodationRepository.save(accommodation);
         Booking booking = new Booking()
                 .setCheckInDate(requestDto.getCheckInDate())
