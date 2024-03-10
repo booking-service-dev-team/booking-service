@@ -1,18 +1,19 @@
 package mate.academy.bookingservice.service.stripe;
 
 import java.math.BigDecimal;
-import java.time.temporal.ChronoUnit;
+import java.net.URL;
 import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Customer;
 import com.stripe.model.CustomerCollection;
 import com.stripe.model.Price;
 import com.stripe.model.Product;
+import com.stripe.model.checkout.Session;
 import com.stripe.param.CustomerCreateParams;
 import com.stripe.param.CustomerListParams;
 import com.stripe.param.PriceCreateParams;
 import com.stripe.param.ProductCreateParams;
-import mate.academy.bookingservice.model.Booking;
+import com.stripe.param.checkout.SessionCreateParams;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -32,17 +33,19 @@ public class StripeServiceImpl implements StripeService {
                         .build();
 
         Customer customer = Customer.create(params);
-        //todo delete this System.out.println at the end
-        System.out.println("New customer create successfully:"
-                + System.lineSeparator()
-                + customer.toString());
     }
 
     @Override
-    public void createProduct(Booking booking) throws StripeException {
+    public Session createPaymentSession(
+            String productName,
+            BigDecimal productPrice,
+            URL successUrl,
+            URL cancelUrl,
+            String customerEmail
+    ) throws StripeException {
         ProductCreateParams params =
                 ProductCreateParams.builder()
-                        .setName(createProductNameFromBooking(booking))
+                        .setName(productName)
                         .build();
 
         Product product = Product.create(params);
@@ -50,66 +53,32 @@ public class StripeServiceImpl implements StripeService {
         PriceCreateParams priceParams =
                 PriceCreateParams.builder()
                         .setCurrency("usd")
-                        .setUnitAmount(calculatePriceInCentsUsdOfBooking(booking))
+                        .setUnitAmount(productPrice.longValue() * 100)
                         .setProduct(product.getId())
                         .build();
 
         Price price = Price.create(priceParams);
 
-        Price priceFromStripe = Price.retrieve(price.getId());
-        System.out.println(priceFromStripe.toJson());
+        SessionCreateParams sessionParams =
+                SessionCreateParams.builder()
+                        .setSuccessUrl(successUrl.toString())
+                        .setSuccessUrl(cancelUrl.toString())
+                        .addLineItem(
+                                SessionCreateParams.LineItem.builder()
+                                        .setPrice(price.getId())
+                                        .setQuantity(1L)
+                                        .build()
+                        )
+                        .setMode(SessionCreateParams.Mode.PAYMENT)
+                        .setCustomerEmail(customerEmail)
+                        .build();
 
-        // todo create Stripe Session
-//        SessionCreateParams sessionParams =
-//                SessionCreateParams.builder()
-//                        .setSuccessUrl("https://example.com/success")
-//                        .addLineItem(
-//                                SessionCreateParams.LineItem.builder()
-//                                        .setPrice("price_1MotwRLkdIwHu7ixYcPLm5uZ")
-//                                        .setQuantity(2L)
-//                                        .build()
-//                        )
-//                        .setMode(SessionCreateParams.Mode.PAYMENT)
-//                        .build();
-//        Session session = Session.create(sessionParams);
-//        Payment payment = new Payment()
-//                .setStatus(Payment.Status.PAID)
-//                .setBookingId(22L)
-//                .setSessionUrl(new URL("http://test.com"))
-//                .setSessionId("1234qwer")
-//                .setAmountToPayUsd(BigDecimal.valueOf(100));
-//        paymentRepository.save(payment);
-
+        return Session.create(sessionParams);
     }
 
     public boolean doesCustomerExist(String email) throws StripeException {
         CustomerListParams params = CustomerListParams.builder().setLimit(1L).setEmail(email).build();
         CustomerCollection customers = Customer.list(params);
         return customers.getData().size() > 0;
-    }
-
-    private Long calculatePriceInCentsUsdOfBooking(Booking booking) {
-        long numberOfRentedDays = ChronoUnit.DAYS.between(booking.getCheckInDate(), booking.getCheckOutDate());
-        long pricePerDayInCentsUsd = booking.getAccommodation().getPricePerDayUsd()
-                .multiply(BigDecimal.valueOf(100))
-                .longValue();
-        return numberOfRentedDays * pricePerDayInCentsUsd;
-    }
-
-    private String createProductNameFromBooking(Booking booking) {
-        return booking.getAccommodation().getType()
-                + " in "
-                + booking.getAccommodation().getAddress().getCountryName()
-                + ", "
-                + booking.getAccommodation().getAddress().getCityName()
-                + ", "
-                + booking.getAccommodation().getAddress().getStreetName()
-                + ", "
-                + booking.getAccommodation().getAddress().getNumberOfHouse()
-                + "; from: "
-                + booking.getCheckInDate()
-                + " to: "
-                + booking.getCheckOutDate();
-
     }
 }

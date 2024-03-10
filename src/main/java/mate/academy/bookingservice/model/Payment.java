@@ -33,9 +33,9 @@ public class Payment {
     private Status status;
     @Column(name = "booking_id", nullable = false)
     private Long bookingId;
-    @Column(name = "session_url", nullable = false)
+    @Column(name = "session_url")
     private URL sessionUrl;
-    @Column(name = "session_id", nullable = false)
+    @Column(name = "session_id")
     private String sessionId;
     @Column(name = "amount_to_pay_usd", nullable = false)
     private BigDecimal amountToPayUsd;
@@ -44,6 +44,7 @@ public class Payment {
 
     public enum Status {
         PENDING,
-        PAID
+        PAID,
+        CANCELED
     }
 }
