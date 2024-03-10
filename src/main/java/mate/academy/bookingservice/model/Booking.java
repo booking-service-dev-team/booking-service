@@ -11,7 +11,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import org.hibernate.annotations.SQLDelete;
@@ -48,5 +50,26 @@ public class Booking {
         CONFIRMED,
         CANCELED,
         EXPIRED
+    }
+
+    public String getDescription() {
+        return status.name()
+                + " in "
+                + accommodation.getAddress().getCountryName()
+                + ", "
+                + accommodation.getAddress().getCityName()
+                + ", "
+                + accommodation.getAddress().getStreetName()
+                + ", "
+                + accommodation.getAddress().getNumberOfHouse()
+                + "; from: "
+                + checkInDate
+                + " to: "
+                + checkOutDate;
+    }
+
+    public BigDecimal getPrice() {
+        long numberOfRentedDays = ChronoUnit.DAYS.between(checkInDate, checkOutDate);
+        return accommodation.getPricePerDayUsd().multiply(BigDecimal.valueOf(numberOfRentedDays));
     }
 }

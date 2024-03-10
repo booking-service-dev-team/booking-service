@@ -1,8 +1,10 @@
 package mate.academy.bookingservice.service.payment;
 
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.List;
 import com.stripe.exception.StripeException;
+import com.stripe.model.checkout.Session;
 import lombok.RequiredArgsConstructor;
 import mate.academy.bookingservice.dto.payment.internal.PaymentInfoDto;
 import mate.academy.bookingservice.exception.EntityNotFoundException;
@@ -25,7 +27,7 @@ public class PaymentServiceImpl implements PaymentService {
     private final PaymentMapper paymentMapper;
     private final StripeService stripeService;
     @Override
-    public void initPaymentSession(String userEmail, Long bookingId)
+    public Payment initPayment(String userEmail, Long bookingId)
             throws MalformedURLException, StripeException {
         if(!stripeService.doesCustomerExist(userEmail)) {
             User user = userRepository.findByEmail(userEmail).orElseThrow(
@@ -38,7 +40,24 @@ public class PaymentServiceImpl implements PaymentService {
         Booking booking = bookingRepository.findById(bookingId).orElseThrow(
                 () -> new EntityNotFoundException("Can't find booking by id: " + bookingId)
         );
-        stripeService.createProduct(booking);
+        Payment payment = new Payment()
+                .setStatus(Payment.Status.PENDING)
+                .setBookingId(booking.getId())
+                .setAmountToPayUsd(booking.getPrice());
+        payment = paymentRepository.save(payment);
+
+        Session paymentSession = stripeService.createPaymentSession(
+                booking.getDescription(),
+                booking.getPrice(),
+                // todo move this link to property file
+                new URL ("http://localhost:8080/api/payments/success?payment_id=" + payment.getId()),
+                new URL ("http://localhost:8080/api/payments/cancel?payment_id=" + payment.getId()),
+                userEmail);
+
+        payment.setSessionUrl(new URL(paymentSession.getUrl()));
+        payment.setSessionId(paymentSession.getId());
+
+        return paymentRepository.save(payment);
     }
 
     @Override
@@ -52,5 +71,15 @@ public class PaymentServiceImpl implements PaymentService {
         return new PaymentInfoDto().setPendingPayments(paymentsByBookingId.stream()
                 .map(paymentMapper::toDto)
                 .toList());
+    }
+
+    @Override
+    public void handlePaymentSuccess(Long paymentId) {
+        paymentRepository.updatePaymentStatusById(paymentId, Payment.Status.PAID);
+    }
+
+    @Override
+    public void handlePaymentCancellation(Long paymentId) {
+        paymentRepository.updatePaymentStatusById(paymentId, Payment.Status.CANCELED);
     }
 }
