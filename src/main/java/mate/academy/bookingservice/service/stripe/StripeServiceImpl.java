@@ -62,7 +62,7 @@ public class StripeServiceImpl implements StripeService {
         SessionCreateParams sessionParams =
                 SessionCreateParams.builder()
                         .setSuccessUrl(successUrl.toString())
-                        .setSuccessUrl(cancelUrl.toString())
+                        .setCancelUrl(cancelUrl.toString())
                         .addLineItem(
                                 SessionCreateParams.LineItem.builder()
                                         .setPrice(price.getId())

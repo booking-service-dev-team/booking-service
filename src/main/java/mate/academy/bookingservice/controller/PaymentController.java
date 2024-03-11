@@ -1,6 +1,8 @@
 package mate.academy.bookingservice.controller;
 
 import java.net.MalformedURLException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import com.stripe.exception.StripeException;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -24,15 +26,19 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Payment management",
         description = "Endpoints for managing payments.")
 @RestController
-@RequestMapping("/payments")
+@RequestMapping("/api/payments")
 @RequiredArgsConstructor
 public class PaymentController {
     private final PaymentService paymentService;
     @PostMapping()
-    public ResponseEntity initPaymentSession (
+    public ResponseEntity initPayment (
             Authentication authentication, @RequestBody CreatePaymentRequestDto requestDto
     ) throws MalformedURLException, StripeException {
-        Payment payment = paymentService.initPayment(authentication.getName(), requestDto.getBookingId());
+        Payment payment = paymentService.initPayment(
+                authentication.getName(),
+                requestDto.getBookingId(),
+                requestDto.getSuccessPageUrl(),
+                requestDto.getCancelPageUrl());
         HttpHeaders headers = new HttpHeaders();
         headers.set("location", payment.getSessionUrl().toString());
         return ResponseEntity.status(HttpStatus.SEE_OTHER).headers(headers).build();
@@ -40,16 +46,22 @@ public class PaymentController {
 
     @GetMapping()
     @ResponseStatus(HttpStatus.OK)
-    public PaymentInfoDto getPaymentInfoDtoByUserId(@RequestParam(name = "user_id", required = false) Long userId) {
+    public PaymentInfoDto getPaymentInfoDtoByUserId(
+            @RequestParam(name = "user_id", required = false) Long userId
+    ) {
         return paymentService.getPaymentInfoDtoByUserId(userId);
     }
 
     @GetMapping("/success")
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
-    public String handleSuccess(@RequestParam(name = "payment_id") Long paymentId) {
+    public ResponseEntity<Object> handleSuccess(
+            @RequestParam(name = "payment_id") Long paymentId,
+            @RequestParam(name = "ui_url") String uiUrl) {
         paymentService.handlePaymentSuccess(paymentId);
-        return "<html><body><h1>Ваше бронювання оплачено</h1></body></html>";
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("location", URLDecoder.decode(uiUrl, StandardCharsets.UTF_8));
+        return ResponseEntity.status(HttpStatus.SEE_OTHER).headers(headers).build();
     }
 
     @GetMapping("/cancel")

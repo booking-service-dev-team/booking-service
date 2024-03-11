@@ -6,7 +6,7 @@ import mate.academy.bookingservice.dto.payment.internal.PaymentInfoDto;
 import mate.academy.bookingservice.model.Payment;
 
 public interface PaymentService {
-    Payment initPayment(String userEmail, Long bookingId) throws MalformedURLException, StripeException;
+    Payment initPayment(String userEmail, Long bookingId, String successPaymentUrl, String cancelPaymentUrl) throws MalformedURLException, StripeException;
 
     PaymentInfoDto getPaymentInfoDtoByUserId(Long userId);
 
