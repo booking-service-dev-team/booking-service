@@ -1,9 +1,6 @@
 package mate.academy.bookingservice.controller;
 
-import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
-import com.stripe.model.Customer;
-import com.stripe.param.CustomerCreateParams;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -24,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Authentication management",
         description = "Endpoints for registration and authentication users")
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthController {
     private final UserService userService;
