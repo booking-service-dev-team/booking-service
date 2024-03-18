@@ -4,6 +4,7 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 src/main/resources/application.properties
+src/main/java/mate/academy/bookingservice/feature/uvecon/re_advert_load_202401102357.json
 
 ### STS ###
 .apt_generated
