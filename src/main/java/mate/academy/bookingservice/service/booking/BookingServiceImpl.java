@@ -34,7 +34,7 @@ public class BookingServiceImpl implements BookingService {
     @SneakyThrows
     @Override
     @Transactional
-    public BookingDto save(CreateBookingRequestDto requestDto, Authentication authentication) {
+    public BookingDto createBooking(CreateBookingRequestDto requestDto, Authentication authentication) {
         checkingAvailabilityOfDates(requestDto.getCheckInDate(),
                 requestDto.getCheckOutDate(),
                 requestDto.getAccommodationId());
@@ -184,6 +184,14 @@ public class BookingServiceImpl implements BookingService {
             if (isDateInRange(checkOut, booking.getCheckInDate(), booking.getCheckOutDate())) {
                 throw new InvalidDateException("This date isn't available: " + checkOut);
             }
+            if (isDateInRange(booking.getCheckInDate(), checkIn, checkOut)) {
+                throw new InvalidDateException("This dates aren't available: "
+                        + booking.getCheckInDate() + " - " + booking.getCheckOutDate());
+            }
+            if (isDateInRange(booking.getCheckOutDate(), checkIn, checkOut)) {
+                throw new InvalidDateException("This dates aren't available: "
+                        + booking.getCheckInDate() + " - " + booking.getCheckOutDate());
+            }
         }
     }
 
@@ -194,6 +202,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     private boolean isDateInRange(LocalDate dateToCheck, LocalDate startDate, LocalDate endDate) {
-        return dateToCheck.isAfter(startDate) && dateToCheck.isBefore(endDate);
+        return dateToCheck.isAfter(startDate.minusDays(1))
+                && dateToCheck.isBefore(endDate.plusDays(1));
     }
 }
