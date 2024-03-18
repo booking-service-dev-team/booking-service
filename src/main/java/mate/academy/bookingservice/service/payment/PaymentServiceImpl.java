@@ -17,6 +17,7 @@ import mate.academy.bookingservice.model.User;
 import mate.academy.bookingservice.repository.booking.BookingRepository;
 import mate.academy.bookingservice.repository.payment.PaymentRepository;
 import mate.academy.bookingservice.repository.user.UserRepository;
+import mate.academy.bookingservice.security.JwtUtil;
 import mate.academy.bookingservice.service.stripe.StripeService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -29,12 +30,13 @@ public class PaymentServiceImpl implements PaymentService {
     private final UserRepository userRepository;
     private final PaymentMapper paymentMapper;
     private final StripeService stripeService;
+    private final JwtUtil jwtUtil;
     @Value("${payment-endpoint.success.url}") String successEndPointUrl;
     @Value("${payment-endpoint.cancel.url}") String cancelEndPointUrl;
     @Value("${payment-endpoint.query-parameter.payment-id.name}") String paymentIdQueryParameterName;
     @Value("${payment-endpoint.query-parameter.ui-url.name}") String uiUrlQueryParameterName;
     @Override
-    public Payment initPayment(String userEmail, Long bookingId, String successPaymentUrl, String cancelPaymentUrl)
+    public Payment initPayment(String userEmail, String userToken, Long bookingId, String successPaymentUrl, String cancelPaymentUrl)
             throws MalformedURLException, StripeException {
         if(!stripeService.doesCustomerExist(userEmail)) {
             User user = userRepository.findByEmail(userEmail).orElseThrow(
@@ -52,43 +54,64 @@ public class PaymentServiceImpl implements PaymentService {
                 .setBookingId(booking.getId())
                 .setAmountToPayUsd(booking.getPrice());
         payment = paymentRepository.save(payment);
-
-        Session paymentSession = stripeService.createPaymentSession(
+        String stripeToken = jwtUtil.generateToken(userToken);
+        Session stripePaymentSession = stripeService.createStripePaymentSession(
                 booking.getDescription(),
                 booking.getPrice(),
                 // todo rewrite with URI builder
                 new URL (successEndPointUrl + "?" + paymentIdQueryParameterName + "=" + payment.getId()
-                        + "&" + uiUrlQueryParameterName + "=" + URLEncoder.encode(successPaymentUrl, StandardCharsets.UTF_8)),
+                        + "&" + uiUrlQueryParameterName + "=" + URLEncoder.encode(successPaymentUrl, StandardCharsets.UTF_8)
+                        + "&token=" + stripeToken),
                 new URL (cancelEndPointUrl + "?" + paymentIdQueryParameterName + "=" + payment.getId()
-                        + "&" + uiUrlQueryParameterName + "=" + URLEncoder.encode(cancelPaymentUrl, StandardCharsets.UTF_8)),
+                        + "&" + uiUrlQueryParameterName + "=" + URLEncoder.encode(cancelPaymentUrl, StandardCharsets.UTF_8)
+                        + "&token=" + stripeToken),
                 userEmail);
-
-        payment.setSessionUrl(new URL(paymentSession.getUrl()));
-        payment.setSessionId(paymentSession.getId());
+        
+        payment.setSessionUrl(new URL(stripePaymentSession.getUrl()));
+        payment.setSessionId(stripePaymentSession.getId());
 
         return paymentRepository.save(payment);
     }
 
     @Override
     public PaymentInfoDto getPaymentInfoDtoByUserId(Long userId) {
-        List<Booking> bookingsByUser = bookingRepository
-                .getBookingsByUser(userRepository.findById(userId).orElseThrow(
-                        () -> new EntityNotFoundException("Can't find user by id: " + userId)
-                ));
-        // todo znaity vsi payments z ysix bookings
-        List<Payment> paymentsByBookingId = paymentRepository.getPaymentsByBookingId(bookingsByUser.get(0).getId());
-        return new PaymentInfoDto().setPendingPayments(paymentsByBookingId.stream()
+        List<Payment> paymentsByUserId = getPaymentsByUserId(userId);
+        return new PaymentInfoDto().setPaymentDtos(paymentsByUserId.stream()
                 .map(paymentMapper::toDto)
                 .toList());
     }
 
     @Override
-    public void handlePaymentSuccess(Long paymentId) {
+    public String handlePaymentSuccess(Long paymentId, String token) {
+        String originToken = jwtUtil.getSubject(token);
+        String userEmail = jwtUtil.getSubject(originToken);
+        User userByPaymentId = getUserByPaymentId(paymentId);
+        // todo get user by payment id
+        // todo compare useremail with useremail from origin token  & thw secur exp if not eql
         paymentRepository.updatePaymentStatusById(paymentId, Payment.Status.PAID);
+        // todo handle change booking status
+        return originToken;
+    }
+
+    private User getUserByPaymentId(Long paymentId) {
+        Payment payment = paymentRepository.findById(paymentId).get();
+        Booking booking = bookingRepository.findById(payment.getBookingId()).get();
+        return booking.getUser();
     }
 
     @Override
     public void handlePaymentCancellation(Long paymentId) {
         paymentRepository.updatePaymentStatusById(paymentId, Payment.Status.CANCELED);
+    }
+
+    private List<Payment> getPaymentsByUserId(Long userId) {
+        List<Booking> bookingsByUser = bookingRepository
+                .getBookingsByUser(userRepository.findById(userId).orElseThrow(
+                        () -> new EntityNotFoundException("Can't find user by id: " + userId)
+                ));
+        return bookingsByUser.stream()
+                .map(booking -> paymentRepository.getPaymentsByBookingId(booking.getId()))
+                .flatMap(List<Payment>::stream)
+                .toList();
     }
 }

@@ -13,7 +13,7 @@
 
         #confirmation {
             display: inline-block;
-            padding: 20px;
+            padding: 30px;
             border-radius: 50%;
             background-color: green;
             color: white;
@@ -33,6 +33,7 @@
     <div id="confirmation">
         <div id="checkmark">&#10003;</div>
     </div>
-    <div id="message">Ваше бронювання оплачено</div>
+    <div id="message">Payment Successful!</div>
+    <p>Payment ID: <span th:text="${paymentId}"></span></p>
 </body>
 </html>

@@ -9,7 +9,6 @@ import mate.academy.bookingservice.dto.booking.external.CreateBookingRequestDto;
 import mate.academy.bookingservice.dto.booking.external.StatusBookingRequestDto;
 import mate.academy.bookingservice.dto.booking.external.UpdateBookingRequestDto;
 import mate.academy.bookingservice.dto.booking.internal.BookingDto;
-import mate.academy.bookingservice.model.Booking;
 import mate.academy.bookingservice.service.booking.BookingService;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -42,7 +41,7 @@ public class BookingController {
             @RequestBody @Valid CreateBookingRequestDto requestDto,
             Authentication authentication
     ) {
-        return bookingService.save(requestDto, authentication);
+        return bookingService.createBooking(requestDto, authentication);
     }
 
     @GetMapping("/")
@@ -67,8 +66,6 @@ public class BookingController {
     @Operation(summary = "Get all bookings of the logged-in user",
             description = "Get all bookings of the logged-in user")
     public List<BookingDto> getAllBookingsOfLoggedInUser(Authentication authentication) {
-        // todo delete this
-//        bookingService.getAllBookingsOfLoggedInUser(authentication).forEach(System.out::println);
         return bookingService.getAllBookingsOfLoggedInUser(authentication);
     }
 

@@ -36,7 +36,7 @@ public class StripeServiceImpl implements StripeService {
     }
 
     @Override
-    public Session createPaymentSession(
+    public Session createStripePaymentSession(
             String productName,
             BigDecimal productPrice,
             URL successUrl,

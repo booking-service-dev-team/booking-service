@@ -23,9 +23,9 @@ public class JwtUtil {
         secret = Keys.hmacShaKeyFor(secretString.getBytes(StandardCharsets.UTF_8));
     }
 
-    public String generateToken(String username) {
+    public String generateToken(String subject) {
         return Jwts.builder()
-                .setSubject(username)
+                .setSubject(subject)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(secret)
@@ -44,7 +44,7 @@ public class JwtUtil {
         }
     }
 
-    public String getUserName(String token) {
+    public String getSubject(String token) {
         return getClaimsFromToken(token, Claims::getSubject);
     }
 
