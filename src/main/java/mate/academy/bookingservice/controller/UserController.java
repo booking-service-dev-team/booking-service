@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "User profile management",
         description = "Endpoints for user profile management")
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/api/users")
 @RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
@@ -41,7 +41,7 @@ public class UserController {
 
     @PutMapping("/me")
     @Operation(summary = "Updating user profile information",
-            description = "Allows users to update their email, firstname and lastname")
+            description = "Allows users to update their email, firstname, and lastname")
     public UserResponseDto update(Authentication authentication,
                                   @RequestBody UserRequestDto requestDto) {
         return userService.update(authentication, requestDto);

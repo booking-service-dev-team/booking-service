@@ -1,5 +1,6 @@
 package mate.academy.bookingservice.feature.uvecon.service;
 
+import java.math.BigDecimal;
 import java.util.Arrays;
 import lombok.RequiredArgsConstructor;
 import mate.academy.bookingservice.dto.accommodation.internal.AccommodationDto;
@@ -35,7 +36,8 @@ public class UveconApartmentAccommodationServiceImpl implements
                 .setAmenities(requestDto.getAmenities())
                 .setSizeOfAccommodation(String.valueOf(requestDto.getSizeOfAccommodation())
                         .concat(" кімн."))
-                .setPricePerMonthUsd(requestDto.getPricePerMonthUsd())
+                .setPricePerDayUsd(requestDto.getPricePerMonthUsd()
+                        .divide(BigDecimal.valueOf(30), 2))
                 .setNumberOfAvailableAccommodation(1);
         return accommodationMapper.toDto(accommodationRepository.save(accommodation));
     }

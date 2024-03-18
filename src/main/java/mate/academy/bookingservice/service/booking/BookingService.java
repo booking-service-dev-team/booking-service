@@ -8,7 +8,7 @@ import mate.academy.bookingservice.dto.booking.internal.BookingDto;
 import org.springframework.security.core.Authentication;
 
 public interface BookingService {
-    BookingDto save(CreateBookingRequestDto requestDto, Authentication authentication);
+    BookingDto createBooking(CreateBookingRequestDto requestDto, Authentication authentication);
 
     List<BookingDto> getBookingsByUserIdAndStatus(Long userId, String status);
 

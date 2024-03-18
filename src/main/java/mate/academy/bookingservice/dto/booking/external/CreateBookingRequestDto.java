@@ -13,6 +13,7 @@ public class CreateBookingRequestDto {
     @DateTimeFormat
     private LocalDate checkInDate;
     @NotNull
+    @DateTimeFormat
     private LocalDate checkOutDate;
     @NotNull
     private Long accommodationId;

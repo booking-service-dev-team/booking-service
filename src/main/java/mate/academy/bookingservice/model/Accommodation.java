@@ -47,8 +47,8 @@ public class Accommodation {
      */
     @Column(name = "amenities")
     private String amenities;
-    @Column(name = "price_per_month_usd")
-    private BigDecimal pricePerMonthUsd;
+    @Column(name = "price_per_day_usd")
+    private BigDecimal pricePerDayUsd;
     // Number of available units of this accommodation
     @Column(name = "number_of_available_accommodation")
     private Integer numberOfAvailableAccommodation;

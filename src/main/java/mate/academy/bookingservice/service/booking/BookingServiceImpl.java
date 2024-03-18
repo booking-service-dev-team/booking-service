@@ -34,19 +34,21 @@ public class BookingServiceImpl implements BookingService {
     @SneakyThrows
     @Override
     @Transactional
-    public BookingDto save(CreateBookingRequestDto requestDto, Authentication authentication) {
+    public BookingDto createBooking(CreateBookingRequestDto requestDto, Authentication authentication) {
         checkingAvailabilityOfDates(requestDto.getCheckInDate(),
                 requestDto.getCheckOutDate(),
                 requestDto.getAccommodationId());
         Accommodation accommodation = findAccommodationById(requestDto
                 .getAccommodationId(), "create");
-        if (accommodation.getNumberOfAvailableAccommodation() > 0) {
-            accommodation.setNumberOfAvailableAccommodation(
-                    accommodation.getNumberOfAvailableAccommodation() - 1
-            );
-        } else {
-            throw new InvalidDateException("Accommodation isn't available");
-        }
+        // todo create logic for check availability and reduction availability.
+        //  maybe reduction availability should doing with change status on CONFIRMED after user payment)
+//        if (accommodation.getNumberOfAvailableAccommodation() > 0) {
+//            accommodation.setNumberOfAvailableAccommodation(
+//                    accommodation.getNumberOfAvailableAccommodation() - 1
+//            );
+//        } else {
+//            throw new InvalidDateException("Accommodation isn't available");
+//        }
         Accommodation savedAccommodation = accommodationRepository.save(accommodation);
         Booking booking = new Booking()
                 .setCheckInDate(requestDto.getCheckInDate())
@@ -182,6 +184,14 @@ public class BookingServiceImpl implements BookingService {
             if (isDateInRange(checkOut, booking.getCheckInDate(), booking.getCheckOutDate())) {
                 throw new InvalidDateException("This date isn't available: " + checkOut);
             }
+            if (isDateInRange(booking.getCheckInDate(), checkIn, checkOut)) {
+                throw new InvalidDateException("This dates aren't available: "
+                        + booking.getCheckInDate() + " - " + booking.getCheckOutDate());
+            }
+            if (isDateInRange(booking.getCheckOutDate(), checkIn, checkOut)) {
+                throw new InvalidDateException("This dates aren't available: "
+                        + booking.getCheckInDate() + " - " + booking.getCheckOutDate());
+            }
         }
     }
 
@@ -192,6 +202,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     private boolean isDateInRange(LocalDate dateToCheck, LocalDate startDate, LocalDate endDate) {
-        return dateToCheck.isAfter(startDate) && dateToCheck.isBefore(endDate);
+        return dateToCheck.isAfter(startDate.minusDays(1))
+                && dateToCheck.isBefore(endDate.plusDays(1));
     }
 }
