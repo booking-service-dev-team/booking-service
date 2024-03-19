@@ -74,6 +74,11 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
+    public Payment initPayment(Long bookingId, String userEmail) {
+        return null;
+    }
+
+    @Override
     public PaymentInfoDto getPaymentInfoDtoByUserId(Long userId) {
         List<Payment> paymentsByUserId = getPaymentsByUserId(userId);
         return new PaymentInfoDto().setPaymentDtos(paymentsByUserId.stream()

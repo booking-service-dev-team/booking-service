@@ -13,4 +13,6 @@ public interface PaymentService {
     String handlePaymentSuccess(Long paymentId, String token);
 
     void handlePaymentCancellation(Long paymentId);
+
+    Payment initPayment(Long bookingId, String userEmail);
 }

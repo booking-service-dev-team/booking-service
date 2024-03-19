@@ -9,8 +9,4 @@ import lombok.experimental.Accessors;
 public class CreatePaymentRequestDto {
     @NotNull
     private Long bookingId;
-    @NotNull
-    private String successPageUrl;
-    @NotNull
-    private String cancelPageUrl;
 }

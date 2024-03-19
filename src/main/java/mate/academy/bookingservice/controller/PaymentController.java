@@ -36,15 +36,10 @@ public class PaymentController {
     private final PaymentService paymentService;
     @PostMapping()
     public ResponseEntity initPayment (
-            Authentication authentication, @RequestBody CreatePaymentRequestDto requestDto,
-            @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeaderValue
-    ) throws MalformedURLException, StripeException {
-        Payment payment = paymentService.initPayment(
-                authentication.getName(),
-                authorizationHeaderValue.substring("Bearer ".length()),
-                requestDto.getBookingId(),
-                requestDto.getSuccessPageUrl(),
-                requestDto.getCancelPageUrl());
+            Authentication authentication, @RequestBody CreatePaymentRequestDto requestDto
+    ) {
+        Payment payment = paymentService.initPayment(requestDto.getBookingId(),
+                authentication.getName());
         HttpHeaders headers = new HttpHeaders();
         headers.set("location", payment.getSessionUrl().toString());
         return ResponseEntity.status(HttpStatus.SEE_OTHER).headers(headers).build();
