@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Підтвердження бронювання</title>
+    <title>Payment successful</title>
     <style>
         body {
             background-color: white;
@@ -34,6 +34,7 @@
         <div id="checkmark">&#10003;</div>
     </div>
     <div id="message">Payment Successful!</div>
-    <p>Payment ID: <span th:text="${paymentId}"></span></p>
+    <p>Booking: <span th:text="${productName}"></span></p>
+    <p>Customer: <span th:text="${customerName}"></span></p>
 </body>
 </html>

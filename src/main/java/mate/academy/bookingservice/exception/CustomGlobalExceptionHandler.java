@@ -44,6 +44,17 @@ public class CustomGlobalExceptionHandler extends ResponseEntityExceptionHandler
         return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
     }
 
+    @ExceptionHandler(CustomStripeException.class)
+    protected ResponseEntity<Object> handleStripeException(CustomStripeException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", ex.getStatusCode());
+        body.put("requestId", ex.getRequestId());
+        body.put("code", ex.getCode());
+        body.put("error", "Stripe exception message: " + ex.getMessage());
+        return new ResponseEntity<>(body, HttpStatusCode.valueOf(ex.getStatusCode()));
+    }
+
     @ExceptionHandler(RegistrationException.class)
     protected ResponseEntity<Object> handleIncorrectRegistration(RegistrationException ex) {
         Map<String, Object> body = new LinkedHashMap<>();

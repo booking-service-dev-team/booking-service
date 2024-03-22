@@ -10,7 +10,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 @RequestMapping("/mock-ui/payments")
 public class MockUiPaymentsController {
 
-//    @GetMapping("/success")
-//    public String handleSuccess(@RequestParam(name = "payment_id") Long paymentId, Model model) {
-
+    @GetMapping("/success")
+    public String handleSuccess(
+            @RequestParam(name = "product_name") String productName,
+            @RequestParam(name = "customer_name") String customerName,
+            Model model
+    ) {
+        model.addAttribute("productName", productName);
+        model.addAttribute("customerName", customerName);
+        return "success_page";
+    }
 }

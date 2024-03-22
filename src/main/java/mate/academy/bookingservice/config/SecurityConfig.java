@@ -44,7 +44,7 @@ public class SecurityConfig {
                                 .permitAll()
                                 .requestMatchers(HttpMethod.GET, "/mock-ui/**")
                                 .permitAll()
-                                .requestMatchers(HttpMethod.GET, "/api/payments/**")
+                                .requestMatchers(HttpMethod.GET, "/api/payments/success")
                                 .permitAll()
                                 .anyRequest()
                                 .authenticated()

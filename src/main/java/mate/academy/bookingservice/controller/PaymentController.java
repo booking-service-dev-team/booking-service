@@ -1,16 +1,14 @@
 package mate.academy.bookingservice.controller;
 
-import java.net.MalformedURLException;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
-import com.stripe.exception.StripeException;
+import com.stripe.model.checkout.Session;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import mate.academy.bookingservice.dto.payment.external.CreatePaymentRequestDto;
 import mate.academy.bookingservice.dto.payment.internal.PaymentInfoDto;
 import mate.academy.bookingservice.model.Payment;
 import mate.academy.bookingservice.service.payment.PaymentService;
+import mate.academy.bookingservice.service.stripe.StripeService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -19,7 +17,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -32,10 +29,13 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/payments")
 @RequiredArgsConstructor
 public class PaymentController {
-    @Value("${payment-endpoint.query-parameter.payment-id.name}") String paymentIdQueryParameterName;
+    @Value("${payment-endpoint.success.mock-ui.url}") String successUrl;
+    @Value("${payment-endpoint.cancel.mock-ui.url}") String cancelUrl;
     private final PaymentService paymentService;
+    private final StripeService stripeService;
+
     @PostMapping()
-    public ResponseEntity initPayment (
+    public ResponseEntity<Object> initPayment (
             Authentication authentication, @RequestBody CreatePaymentRequestDto requestDto
     ) {
         Payment payment = paymentService.initPayment(requestDto.getBookingId(),
@@ -52,21 +52,23 @@ public class PaymentController {
     ) {
         return paymentService.getPaymentInfoDtoByUserId(userId);
     }
-    
+
+    // todo add paymentId to metadata
+    @SneakyThrows
     @GetMapping("/success")
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
     public ResponseEntity<Object> handleSuccess(
-            @RequestParam(name = "payment_id") Long paymentId,
-            @RequestParam(name = "ui_url") String uiUrl,
-            @RequestParam(name = "token") String token,
-            HttpServletRequest request
+            @RequestParam(name = "session_id") String checkoutSessionId
     ) {
-        String authToken = paymentService.handlePaymentSuccess(paymentId, token);
-        request.setAttribute("Authorization", "Bearer " + authToken);
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("location", URLDecoder.decode(uiUrl, StandardCharsets.UTF_8)
-                .concat("?" + paymentIdQueryParameterName + "=" + paymentId));
+        Session session = stripeService.getSessionByCheckoutSessionId(checkoutSessionId);
+        String productName = session.getMetadata().get("productName");
+        String customerName = session.getCustomerDetails().getName();
+                HttpHeaders headers = new HttpHeaders();
+        headers.set("location", successUrl
+                .concat("?" + "product_name" + "=" + productName)
+                .concat("&" + "customer_name" + "=" + customerName)
+        );
         return ResponseEntity.status(HttpStatus.SEE_OTHER).headers(headers)
                 .build();
     }

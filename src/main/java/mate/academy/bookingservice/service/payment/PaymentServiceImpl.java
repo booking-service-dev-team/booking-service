@@ -1,13 +1,11 @@
 package mate.academy.bookingservice.service.payment;
 
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
-import com.stripe.exception.StripeException;
+import com.stripe.model.Customer;
 import com.stripe.model.checkout.Session;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import mate.academy.bookingservice.dto.payment.internal.PaymentInfoDto;
 import mate.academy.bookingservice.exception.EntityNotFoundException;
 import mate.academy.bookingservice.mapper.PaymentMapper;
@@ -21,31 +19,26 @@ import mate.academy.bookingservice.security.JwtUtil;
 import mate.academy.bookingservice.service.stripe.StripeService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Component
 @RequiredArgsConstructor
 public class PaymentServiceImpl implements PaymentService {
+    @Value("${payment-endpoint.success.url}") String successUrl;
+    @Value("${payment-endpoint.cancel.url}") String cancelUrl;
+    public static final String CHECKOUT_SESSION_ID_QUERY_PARAM
+            = "?session_id={CHECKOUT_SESSION_ID}";
     private final PaymentRepository paymentRepository;
     private final BookingRepository bookingRepository;
     private final UserRepository userRepository;
     private final PaymentMapper paymentMapper;
     private final StripeService stripeService;
     private final JwtUtil jwtUtil;
-    @Value("${payment-endpoint.success.url}") String successEndPointUrl;
-    @Value("${payment-endpoint.cancel.url}") String cancelEndPointUrl;
-    @Value("${payment-endpoint.query-parameter.payment-id.name}") String paymentIdQueryParameterName;
-    @Value("${payment-endpoint.query-parameter.ui-url.name}") String uiUrlQueryParameterName;
-    @Override
-    public Payment initPayment(String userEmail, String userToken, Long bookingId, String successPaymentUrl, String cancelPaymentUrl)
-            throws MalformedURLException, StripeException {
-        if(!stripeService.doesCustomerExist(userEmail)) {
-            User user = userRepository.findByEmail(userEmail).orElseThrow(
-                    () -> new EntityNotFoundException("Can't find user by email: " + userEmail)
-            );
-            stripeService
-                    .createCustomer(user.getFirstName() + " " + user.getLastName(), userEmail);
-        }
 
+    @SneakyThrows
+    @Override
+    public Payment initPayment(Long bookingId, String userEmail) {
+        Customer customer = stripeService.getCustomerByEmail(userEmail);
         Booking booking = bookingRepository.findById(bookingId).orElseThrow(
                 () -> new EntityNotFoundException("Can't find booking by id: " + bookingId)
         );
@@ -54,28 +47,18 @@ public class PaymentServiceImpl implements PaymentService {
                 .setBookingId(booking.getId())
                 .setAmountToPayUsd(booking.getPrice());
         payment = paymentRepository.save(payment);
-        String stripeToken = jwtUtil.generateToken(userToken);
+
         Session stripePaymentSession = stripeService.createStripePaymentSession(
                 booking.getDescription(),
                 booking.getPrice(),
-                // todo rewrite with URI builder
-                new URL (successEndPointUrl + "?" + paymentIdQueryParameterName + "=" + payment.getId()
-                        + "&" + uiUrlQueryParameterName + "=" + URLEncoder.encode(successPaymentUrl, StandardCharsets.UTF_8)
-                        + "&token=" + stripeToken),
-                new URL (cancelEndPointUrl + "?" + paymentIdQueryParameterName + "=" + payment.getId()
-                        + "&" + uiUrlQueryParameterName + "=" + URLEncoder.encode(cancelPaymentUrl, StandardCharsets.UTF_8)
-                        + "&token=" + stripeToken),
-                userEmail);
-        
+                createUrl(successUrl),
+                createUrl(cancelUrl),
+                customer.getId()
+        );
+
         payment.setSessionUrl(new URL(stripePaymentSession.getUrl()));
         payment.setSessionId(stripePaymentSession.getId());
-
         return paymentRepository.save(payment);
-    }
-
-    @Override
-    public Payment initPayment(Long bookingId, String userEmail) {
-        return null;
     }
 
     @Override
@@ -118,5 +101,12 @@ public class PaymentServiceImpl implements PaymentService {
                 .map(booking -> paymentRepository.getPaymentsByBookingId(booking.getId()))
                 .flatMap(List<Payment>::stream)
                 .toList();
+    }
+
+    private String createUrl(String url) {
+        return UriComponentsBuilder
+                .fromHttpUrl(url)
+                .toUriString()
+                .concat(CHECKOUT_SESSION_ID_QUERY_PARAM);
     }
 }
