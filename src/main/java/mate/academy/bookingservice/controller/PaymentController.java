@@ -1,5 +1,8 @@
 package mate.academy.bookingservice.controller;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.util.Queue;
 import com.stripe.model.checkout.Session;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -65,10 +68,10 @@ public class PaymentController {
         String productName = session.getMetadata().get("productName");
         String customerName = session.getCustomerDetails().getName();
                 HttpHeaders headers = new HttpHeaders();
-        headers.set("location", successUrl
-                .concat("?" + "product_name" + "=" + productName)
-                .concat("&" + "customer_name" + "=" + customerName)
-        );
+        headers.set("location", URLDecoder.decode(successUrl
+                        .concat("?" + "product_name" + "=" + productName)
+                        .concat("&" + "customer_name" + "=" + customerName)
+                , StandardCharsets.UTF_8));
         return ResponseEntity.status(HttpStatus.SEE_OTHER).headers(headers)
                 .build();
     }
