@@ -31,6 +31,7 @@ public class BookingServiceImpl implements BookingService {
     private final UserRepository userRepository;
     private final BookingMapper bookingMapper;
 
+    // todo remove things that do not belong to the functionality of this class
     @SneakyThrows
     @Override
     @Transactional

@@ -2,6 +2,7 @@ package mate.academy.bookingservice.service.stripe;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
+import java.util.Map;
 import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Customer;
@@ -45,6 +46,7 @@ public class StripeServiceImpl implements StripeService {
     }
 
     public Session createStripePaymentSession(
+            Long paymentId,
             String productName,
             BigDecimal productPrice,
             String successUrl,
@@ -78,6 +80,7 @@ public class StripeServiceImpl implements StripeService {
                                         .build()
                         )
                         .putMetadata("productName", productName)
+                        .putMetadata("paymentId", String.valueOf(paymentId))
                         .setMode(SessionCreateParams.Mode.PAYMENT)
                         .setCustomer(customerId)
                         .build();
@@ -129,5 +132,15 @@ public class StripeServiceImpl implements StripeService {
             );
             return createCustomer(user.getFirstName() + " " + user.getLastName(), email);
         }
+    }
+
+    @Override
+    public Map<String, String> getPaymentDataByCheckoutSessionId(String checkoutSessionId) {
+        Session session = getSessionByCheckoutSessionId(checkoutSessionId);
+        Map<String, String> data = new HashMap<>();
+        data.put("paymentId", session.getMetadata().get("paymentId"));
+        data.put("productName", session.getMetadata().get("productName"));
+        data.put("customerName", session.getCustomerDetails().getName());
+        return data;
     }
 }
