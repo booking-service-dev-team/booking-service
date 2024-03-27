@@ -9,6 +9,7 @@ import mate.academy.bookingservice.dto.booking.external.CreateBookingRequestDto;
 import mate.academy.bookingservice.dto.booking.external.StatusBookingRequestDto;
 import mate.academy.bookingservice.dto.booking.external.UpdateBookingRequestDto;
 import mate.academy.bookingservice.dto.booking.internal.BookingDto;
+import mate.academy.bookingservice.exception.AvailabilityException;
 import mate.academy.bookingservice.exception.EntityNotFoundException;
 import mate.academy.bookingservice.exception.IllegalArgumentException;
 import mate.academy.bookingservice.exception.InvalidDateException;
@@ -31,30 +32,23 @@ public class BookingServiceImpl implements BookingService {
     private final UserRepository userRepository;
     private final BookingMapper bookingMapper;
 
-    // todo remove things that do not belong to the functionality of this class
+    // todo REFACTORING remove things that do not belong to the functionality of this class
     @SneakyThrows
     @Override
     @Transactional
-    public BookingDto createBooking(CreateBookingRequestDto requestDto, Authentication authentication) {
+    public BookingDto createBooking(
+            CreateBookingRequestDto requestDto,
+            Authentication authentication
+    ) {
         checkingAvailabilityOfDates(requestDto.getCheckInDate(),
                 requestDto.getCheckOutDate(),
                 requestDto.getAccommodationId());
-        Accommodation accommodation = findAccommodationById(requestDto
-                .getAccommodationId(), "create");
-        // todo create logic for check availability and reduction availability.
-        //  maybe reduction availability should doing with change status on CONFIRMED after user payment)
-//        if (accommodation.getNumberOfAvailableAccommodation() > 0) {
-//            accommodation.setNumberOfAvailableAccommodation(
-//                    accommodation.getNumberOfAvailableAccommodation() - 1
-//            );
-//        } else {
-//            throw new InvalidDateException("Accommodation isn't available");
-//        }
-        Accommodation savedAccommodation = accommodationRepository.save(accommodation);
+        Accommodation accommodation = findAccommodationById(requestDto.getAccommodationId());
+        checkAvailabilityOfAccommodation(accommodation);
         Booking booking = new Booking()
                 .setCheckInDate(requestDto.getCheckInDate())
                 .setCheckOutDate(requestDto.getCheckOutDate())
-                .setAccommodation(savedAccommodation)
+                .setAccommodation(accommodation)
                 .setUser(getUserByAuthentication(authentication))
                 .setStatus(Booking.Status.PENDING);
 
@@ -110,7 +104,7 @@ public class BookingServiceImpl implements BookingService {
                 .setId(id)
                 .setCheckInDate(requestDto.getCheckInDate())
                 .setCheckOutDate(requestDto.getCheckOutDate())
-                .setAccommodation(findAccommodationById(requestDto.getAccommodationId(), "update"))
+                .setAccommodation(findAccommodationById(requestDto.getAccommodationId()))
                 .setUser(findUserById(requestDto.getUserId()))
                 .setStatus(findBookingStatusValueByStatusName(requestDto
                         .getStatusName()));
@@ -153,12 +147,11 @@ public class BookingServiceImpl implements BookingService {
         );
     }
 
-    private Accommodation findAccommodationById(Long id, String operation) {
+    private Accommodation findAccommodationById(Long id) {
         return accommodationRepository
                 .findById(id).orElseThrow(
-                        () -> new EntityNotFoundException("Can't " + operation + " booking. "
-                                + "Accommodation with id: " + id
-                                + " isn't exist")
+                        () -> new EntityNotFoundException("Can't find accommodation with id: "
+                                + id)
                 );
     }
 
@@ -193,6 +186,13 @@ public class BookingServiceImpl implements BookingService {
                 throw new InvalidDateException("This dates aren't available: "
                         + booking.getCheckInDate() + " - " + booking.getCheckOutDate());
             }
+        }
+    }
+
+    private void checkAvailabilityOfAccommodation(Accommodation accommodation) {
+        if (accommodation.getNumberOfAvailableAccommodation() < 1) {
+            throw new AvailabilityException("Accommodation with id: " + accommodation.getId()
+            + "isn't available");
         }
     }
 

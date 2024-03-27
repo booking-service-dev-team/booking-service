@@ -52,6 +52,7 @@ public class AccommodationController {
         return accommodationService.saveAll(requestDtos);
     }
 
+    // todo think about implement getAll(String cityName, LocalDate checkIn, LocalDate checkOut)
     @Operation(summary = "Get all accommodations",
             description = "Get a list of all available accommodations")
     @GetMapping

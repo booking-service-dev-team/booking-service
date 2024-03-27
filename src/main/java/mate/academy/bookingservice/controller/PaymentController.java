@@ -3,13 +3,14 @@ package mate.academy.bookingservice.controller;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import mate.academy.bookingservice.dto.payment.external.CreatePaymentRequestDto;
-import mate.academy.bookingservice.dto.payment.external.PaymentResultDto;
+import mate.academy.bookingservice.dto.payment.external.PaymentResponseDto;
 import mate.academy.bookingservice.dto.payment.internal.PaymentInfoDto;
 import mate.academy.bookingservice.model.Payment;
 import mate.academy.bookingservice.service.payment.PaymentService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -41,27 +42,34 @@ public class PaymentController {
 
     @GetMapping()
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public PaymentInfoDto getPaymentInfoDtoByUserId(
-            @RequestParam(name = "user_id", required = false) Long userId
+            @RequestParam(name = "user_id") Long userId
     ) {
         return paymentService.getPaymentInfoDtoByUserId(userId);
+    }
+
+    @GetMapping("/my")
+    @ResponseStatus(HttpStatus.OK)
+    public PaymentInfoDto getPaymentInfoDtoByLoggedInUser(Authentication authentication) {
+        return paymentService.getPaymentInfoDtoByLoggedInUser(authentication);
     }
 
     @GetMapping("/success")
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
-    public PaymentResultDto handleSuccess(
+    public PaymentResponseDto handleSuccess(
             @RequestParam(name = "session_id") String checkoutSessionId
     ) {
         return paymentService.handleSuccess(checkoutSessionId);
     }
 
-    // todo add cancellation handling
     @GetMapping("/cancel")
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
-    public String handleCancel(@RequestParam(name = "payment_id") Long paymentId) {
-        paymentService.handlePaymentCancellation(paymentId);
-        return "<html><body><h1>Ваше бронювання скасовано</h1></body></html>";
+    public PaymentResponseDto handleCancel(
+            @RequestParam(name = "session_id") String checkoutSessionId
+    ) {
+        return paymentService.handleCancel(checkoutSessionId);
     }
 }

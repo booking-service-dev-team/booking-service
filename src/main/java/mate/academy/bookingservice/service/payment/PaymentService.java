@@ -1,8 +1,10 @@
 package mate.academy.bookingservice.service.payment;
 
-import mate.academy.bookingservice.dto.payment.external.PaymentResultDto;
+import java.util.Map;
+import mate.academy.bookingservice.dto.payment.external.PaymentResponseDto;
 import mate.academy.bookingservice.dto.payment.internal.PaymentInfoDto;
 import mate.academy.bookingservice.model.Payment;
+import org.springframework.security.core.Authentication;
 
 public interface PaymentService {
 
@@ -12,5 +14,9 @@ public interface PaymentService {
 
     Payment initPayment(Long bookingId, String userEmail);
 
-    PaymentResultDto handleSuccess(String checkoutSessionId);
+    PaymentResponseDto handleSuccess(String checkoutSessionId);
+
+    PaymentResponseDto handleCancel(String checkoutSessionId);
+
+    PaymentInfoDto getPaymentInfoDtoByLoggedInUser(Authentication authentication);
 }
