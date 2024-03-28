@@ -57,6 +57,23 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    public BookingDto cancelUsersBookingById(Long bookingId, Authentication authentication) {
+        List<Booking> bookingsByUser = bookingRepository
+                .getBookingsByUser(getUserByAuthentication(authentication));
+        Booking canceledBooking = bookingsByUser.stream()
+                .filter(b -> b.getId().equals(bookingId)
+                        && b.getStatus().equals(Booking.Status.PENDING))
+                .map(b -> b.setStatus(Booking.Status.CANCELED))
+                .findAny()
+                .orElseThrow(
+                        () -> new EntityNotFoundException(
+                                "Can't find relevant user's booking with id: " + bookingId
+                        )
+                );
+        return bookingMapper.toDto(bookingRepository.save(canceledBooking));
+    }
+
+    @Override
     @SneakyThrows
     public List<BookingDto> getBookingsByUserIdAndStatus(Long userId, String statusName) {
         return bookingRepository

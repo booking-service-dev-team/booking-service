@@ -44,6 +44,16 @@ public class BookingController {
         return bookingService.createBooking(requestDto, authentication);
     }
 
+    @PatchMapping("/{bookingId}/cancel")
+    @ResponseStatus(HttpStatus.OK)
+    @Operation(summary = "Cancellation booking by id",
+            description = "Cancellation of one of the user's bookings by booking ID. "
+                    + "Changing the booking status to 'CANCEL'")
+    public BookingDto cancelBooking(@PathVariable Long bookingId,
+                                   Authentication authentication) {
+        return bookingService.cancelUsersBookingById(bookingId, authentication);
+    }
+
     @GetMapping("/")
     @ResponseStatus(HttpStatus.OK)
     @PreAuthorize("hasRole('ROLE_ADMIN')")

@@ -23,4 +23,6 @@ public interface BookingService {
     void deleteById(Long id);
 
     List<BookingDto> getBookingsByStatus(String status);
+
+    BookingDto cancelUsersBookingById(Long bookingId, Authentication authentication);
 }
