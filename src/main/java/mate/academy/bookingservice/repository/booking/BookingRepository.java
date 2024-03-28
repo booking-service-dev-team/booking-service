@@ -1,5 +1,6 @@
 package mate.academy.bookingservice.repository.booking;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import mate.academy.bookingservice.model.Booking;
@@ -16,6 +17,8 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<Booking> getBookingsByStatus(Booking.Status status);
 
     List<Booking> getBookingsByUser(User user);
+
+    List<Booking> getBookingsByCheckOutDate(LocalDate checkOutDate);
 
     List<Booking> findBookingsByAccommodationIdAndStatus(Long accommodationId,
                                                          Booking.Status status);

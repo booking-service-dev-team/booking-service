@@ -36,7 +36,7 @@ public class BookingController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Create new booking",
-            description = "Create new booking")
+            description = "Create new booking that belongs to the logged-in user")
     public BookingDto createBooking(
             @RequestBody @Valid CreateBookingRequestDto requestDto,
             Authentication authentication
@@ -48,7 +48,7 @@ public class BookingController {
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "Cancellation booking by id",
             description = "Cancellation of one of the user's bookings by booking ID. "
-                    + "Changing the booking status to 'CANCEL'")
+                    + "Changing booking status from 'PENDING' to 'CANCEL'")
     public BookingDto cancelBooking(@PathVariable Long bookingId,
                                    Authentication authentication) {
         return bookingService.cancelUsersBookingById(bookingId, authentication);

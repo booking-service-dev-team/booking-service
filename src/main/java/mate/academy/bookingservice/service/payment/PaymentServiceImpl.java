@@ -18,6 +18,7 @@ import mate.academy.bookingservice.model.User;
 import mate.academy.bookingservice.repository.booking.BookingRepository;
 import mate.academy.bookingservice.repository.payment.PaymentRepository;
 import mate.academy.bookingservice.repository.user.UserRepository;
+import mate.academy.bookingservice.service.booking.BookingService;
 import mate.academy.bookingservice.service.stripe.StripeService;
 import mate.academy.bookingservice.service.user.UserService;
 import org.springframework.beans.factory.annotation.Value;
@@ -39,6 +40,7 @@ public class PaymentServiceImpl implements PaymentService {
     private final UserService userService;
     private final PaymentMapper paymentMapper;
     private final StripeService stripeService;
+    private final BookingService bookingService;
 
     @SneakyThrows
     @Override
@@ -94,6 +96,7 @@ public class PaymentServiceImpl implements PaymentService {
     public PaymentResponseDto handleSuccess(String checkoutSessionId) {
         Map<String, String> paymentData = stripeService
                 .getPaymentDataByCheckoutSessionId(checkoutSessionId);
+        paymentData.put("message", "Payment success!");
         Long paymentId = Long.valueOf(paymentData.get("paymentId"));
         paymentRepository.updatePaymentStatusById(paymentId, Payment.Status.PAID);
         Long bookingId = paymentRepository.getBookingIdByPaymentId(paymentId);
@@ -105,6 +108,7 @@ public class PaymentServiceImpl implements PaymentService {
     public PaymentResponseDto handleCancel(String checkoutSessionId) {
         Map<String, String> paymentData = stripeService
                 .getPaymentDataByCheckoutSessionId(checkoutSessionId);
+        paymentData.put("message", "The payment is not successful. Link is valid for 24 hours!");
         Long paymentId = Long.valueOf(paymentData.get("paymentId"));
         paymentRepository.updatePaymentStatusById(paymentId, Payment.Status.CANCELED);
         Long bookingId = paymentRepository.getBookingIdByPaymentId(paymentId);
@@ -142,11 +146,18 @@ public class PaymentServiceImpl implements PaymentService {
                     "This booking with id: " + bookingId + " have status: " + booking.getStatus()
             );
         }
+        bookingService.checkingAvailabilityOfDates(
+                booking.getCheckInDate(),
+                booking.getCheckOutDate(),
+                booking.getAccommodation().getId()
+        );
+        bookingService.checkAvailabilityOfAccommodation(booking.getAccommodation());
         return booking;
     }
 
     private PaymentResponseDto buildPaymentResponseDto(Map<String, String> paymentData) {
         return new PaymentResponseDto(
+                paymentData.get("message"),
                 paymentData.get("paymentId"),
                 paymentData.get("productName"),
                 paymentData.get("customerName")

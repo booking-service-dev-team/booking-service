@@ -21,10 +21,10 @@ import mate.academy.bookingservice.repository.accommodation.AccommodationReposit
 import mate.academy.bookingservice.repository.booking.BookingRepository;
 import mate.academy.bookingservice.repository.user.UserRepository;
 import org.springframework.security.core.Authentication;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-@Component
+@Service
 @RequiredArgsConstructor
 public class BookingServiceImpl implements BookingService {
     private final BookingRepository bookingRepository;
@@ -141,8 +141,49 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    public List<Booking> getBookingsByCheckOutDate(LocalDate date) {
+        return bookingRepository.getBookingsByCheckOutDate(date);
+    }
+
+    @Override
     public void deleteById(Long id) {
         bookingRepository.deleteById(id);
+    }
+
+    @SneakyThrows
+    @Override
+    public void checkingAvailabilityOfDates(
+            LocalDate checkIn, LocalDate checkOut, Long accommodationId
+    ) {
+        if (checkIn.isAfter(checkOut) || checkIn.isBefore(LocalDate.now())) {
+            throw new InvalidDateException("Invalid date range");
+        }
+        List<Booking> bookings = findBookingsByAccommodationIdAndStatus(accommodationId,
+                Booking.Status.CONFIRMED);
+        for (Booking booking : bookings) {
+            if (isDateInRange(checkIn, booking.getCheckInDate(), booking.getCheckOutDate())) {
+                throw new InvalidDateException("This date isn't available: " + checkIn);
+            }
+            if (isDateInRange(checkOut, booking.getCheckInDate(), booking.getCheckOutDate())) {
+                throw new InvalidDateException("This date isn't available: " + checkOut);
+            }
+            if (isDateInRange(booking.getCheckInDate(), checkIn, checkOut)) {
+                throw new InvalidDateException("This dates aren't available: "
+                        + booking.getCheckInDate() + " - " + booking.getCheckOutDate());
+            }
+            if (isDateInRange(booking.getCheckOutDate(), checkIn, checkOut)) {
+                throw new InvalidDateException("This dates aren't available: "
+                        + booking.getCheckInDate() + " - " + booking.getCheckOutDate());
+            }
+        }
+    }
+
+    @Override
+    public void checkAvailabilityOfAccommodation(Accommodation accommodation) {
+        if (accommodation.getNumberOfAvailableAccommodation() < 1) {
+            throw new AvailabilityException("Accommodation with id: " + accommodation.getId()
+                    + "isn't available");
+        }
     }
 
     private Booking.Status findBookingStatusValueByStatusName(String statusName)
@@ -177,40 +218,6 @@ public class BookingServiceImpl implements BookingService {
                 () -> new EntityNotFoundException("Can't find user by email: "
                         + authentication.getName())
         );
-    }
-
-    private void checkingAvailabilityOfDates(
-            LocalDate checkIn, LocalDate checkOut, Long accommodationId
-    )
-            throws InvalidDateException {
-        if (checkIn.isAfter(checkOut) || checkIn.isBefore(LocalDate.now())) {
-            throw new InvalidDateException("Invalid date range");
-        }
-        List<Booking> bookings = findBookingsByAccommodationIdAndStatus(accommodationId,
-                Booking.Status.CONFIRMED);
-        for (Booking booking : bookings) {
-            if (isDateInRange(checkIn, booking.getCheckInDate(), booking.getCheckOutDate())) {
-                throw new InvalidDateException("This date isn't available: " + checkIn);
-            }
-            if (isDateInRange(checkOut, booking.getCheckInDate(), booking.getCheckOutDate())) {
-                throw new InvalidDateException("This date isn't available: " + checkOut);
-            }
-            if (isDateInRange(booking.getCheckInDate(), checkIn, checkOut)) {
-                throw new InvalidDateException("This dates aren't available: "
-                        + booking.getCheckInDate() + " - " + booking.getCheckOutDate());
-            }
-            if (isDateInRange(booking.getCheckOutDate(), checkIn, checkOut)) {
-                throw new InvalidDateException("This dates aren't available: "
-                        + booking.getCheckInDate() + " - " + booking.getCheckOutDate());
-            }
-        }
-    }
-
-    private void checkAvailabilityOfAccommodation(Accommodation accommodation) {
-        if (accommodation.getNumberOfAvailableAccommodation() < 1) {
-            throw new AvailabilityException("Accommodation with id: " + accommodation.getId()
-            + "isn't available");
-        }
     }
 
     private List<Booking> findBookingsByAccommodationIdAndStatus(
