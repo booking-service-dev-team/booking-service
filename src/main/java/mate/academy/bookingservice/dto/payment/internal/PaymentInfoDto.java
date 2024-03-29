@@ -7,5 +7,5 @@ import lombok.experimental.Accessors;
 @Data
 @Accessors(chain = true)
 public class PaymentInfoDto {
-    public List<PaymentDto> paymentDtos;
+    private List<PaymentDto> paymentDtos;
 }

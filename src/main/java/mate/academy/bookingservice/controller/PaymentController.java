@@ -30,7 +30,7 @@ public class PaymentController {
     private final PaymentService paymentService;
 
     @PostMapping()
-    public ResponseEntity<Object> initPayment (
+    public ResponseEntity<Object> initPayment(
             Authentication authentication, @RequestBody CreatePaymentRequestDto requestDto
     ) {
         Payment payment = paymentService.initPayment(requestDto.getBookingId(),

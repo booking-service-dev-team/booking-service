@@ -2,7 +2,6 @@ package mate.academy.bookingservice.repository.payment;
 
 import java.util.List;
 import mate.academy.bookingservice.model.Payment;
-import org.hibernate.annotations.processing.SQL;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

@@ -18,6 +18,7 @@ public class BookingScheduledService {
         bookingService.getBookingsByCheckOutDate(LocalDate.now()).stream()
                 .map(b -> b.setStatus(Booking.Status.EXPIRED))
                 .forEach(bookingRepository::save);
-        // todo implement telegram message for each EXPIRED booking or else "No expired bookings today!"
+        // todo implement telegram message for each EXPIRED booking
+        //  or else "No expired bookings today!"
     }
 }

@@ -1,8 +1,5 @@
 package mate.academy.bookingservice.service.stripe;
 
-import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.Map;
 import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Customer;
@@ -15,6 +12,9 @@ import com.stripe.param.CustomerListParams;
 import com.stripe.param.PriceCreateParams;
 import com.stripe.param.ProductCreateParams;
 import com.stripe.param.checkout.SessionCreateParams;
+import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.Map;
 import lombok.SneakyThrows;
 import mate.academy.bookingservice.exception.CustomStripeException;
 import mate.academy.bookingservice.exception.EntityNotFoundException;
@@ -27,6 +27,7 @@ import org.springframework.stereotype.Component;
 public class StripeServiceImpl implements StripeService {
 
     private final UserRepository userRepository;
+
     public StripeServiceImpl(@Value("${stripe.api.key}") String stripeApiKey,
                              UserRepository userRepository) {
         this.userRepository = userRepository;
@@ -87,12 +88,6 @@ public class StripeServiceImpl implements StripeService {
         return Session.create(sessionParams);
     }
 
-    public boolean doesCustomerExist(String email) throws StripeException {
-        CustomerListParams params = CustomerListParams.builder().setLimit(1L).setEmail(email).build();
-        CustomerCollection customers = Customer.list(params);
-        return customers.getData().size() > 0;
-    }
-
     @SneakyThrows
     public Session getSessionByCheckoutSessionId(String checkoutSessionId) {
         Session session;
@@ -111,7 +106,10 @@ public class StripeServiceImpl implements StripeService {
 
     @SneakyThrows
     public Customer getCustomerByEmail(String email) {
-        CustomerListParams params = CustomerListParams.builder().setLimit(1L).setEmail(email).build();
+        CustomerListParams params = CustomerListParams.builder()
+                .setLimit(1L)
+                .setEmail(email)
+                .build();
         CustomerCollection customers;
         try {
             customers = Customer.list(params);

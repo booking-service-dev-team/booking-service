@@ -1,10 +1,10 @@
 package mate.academy.bookingservice.service.payment;
 
+import com.stripe.model.Customer;
+import com.stripe.model.checkout.Session;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
-import com.stripe.model.Customer;
-import com.stripe.model.checkout.Session;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import mate.academy.bookingservice.dto.payment.external.PaymentResponseDto;
@@ -30,10 +30,10 @@ import org.springframework.web.util.UriComponentsBuilder;
 @Service
 @RequiredArgsConstructor
 public class PaymentServiceImpl implements PaymentService {
-    @Value("${payment-endpoint.success.url}") String successUrl;
-    @Value("${payment-endpoint.cancel.url}") String cancelUrl;
     public static final String CHECKOUT_SESSION_ID_QUERY_PARAM
             = "?session_id={CHECKOUT_SESSION_ID}";
+    @Value("${payment-endpoint.success.url}") private String successUrl;
+    @Value("${payment-endpoint.cancel.url}") private String cancelUrl;
     private final PaymentRepository paymentRepository;
     private final BookingRepository bookingRepository;
     private final UserRepository userRepository;
@@ -85,11 +85,6 @@ public class PaymentServiceImpl implements PaymentService {
         Payment payment = paymentRepository.findById(paymentId).get();
         Booking booking = bookingRepository.findById(payment.getBookingId()).get();
         return booking.getUser();
-    }
-
-    @Override
-    public void handlePaymentCancellation(Long paymentId) {
-//        paymentRepository.updatePaymentByIdAndStatus(paymentId, Payment.Status.CANCELED);
     }
 
     @Override
