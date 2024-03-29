@@ -1,16 +1,19 @@
 package mate.academy.bookingservice.service.payment;
 
-import java.net.MalformedURLException;
-import com.stripe.exception.StripeException;
+import mate.academy.bookingservice.dto.payment.external.PaymentResponseDto;
 import mate.academy.bookingservice.dto.payment.internal.PaymentInfoDto;
 import mate.academy.bookingservice.model.Payment;
+import org.springframework.security.core.Authentication;
 
 public interface PaymentService {
-    Payment initPayment(String userEmail, String userToken, Long bookingId, String successPaymentUrl, String cancelPaymentUrl) throws MalformedURLException, StripeException;
 
     PaymentInfoDto getPaymentInfoDtoByUserId(Long userId);
 
-    String handlePaymentSuccess(Long paymentId, String token);
+    Payment initPayment(Long bookingId, String userEmail);
 
-    void handlePaymentCancellation(Long paymentId);
+    PaymentResponseDto handleSuccess(String checkoutSessionId);
+
+    PaymentResponseDto handleCancel(String checkoutSessionId);
+
+    PaymentInfoDto getPaymentInfoDtoByLoggedInUser(Authentication authentication);
 }

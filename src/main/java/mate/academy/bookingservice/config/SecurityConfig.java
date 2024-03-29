@@ -38,11 +38,13 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(
                         auth -> auth
-                                .requestMatchers("/api/auth/**")
+                                .requestMatchers("/auth/**")
                                 .permitAll()
                                 .requestMatchers(HttpMethod.GET, "/accommodations")
                                 .permitAll()
-                                .requestMatchers(HttpMethod.GET, "/ui/**")
+                                .requestMatchers(HttpMethod.GET, "/payments/success")
+                                .permitAll()
+                                .requestMatchers(HttpMethod.GET, "/payments/cancel")
                                 .permitAll()
                                 .anyRequest()
                                 .authenticated()

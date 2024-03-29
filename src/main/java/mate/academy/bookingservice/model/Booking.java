@@ -53,9 +53,7 @@ public class Booking {
     }
 
     public String getDescription() {
-        return status.name()
-                + " in "
-                + accommodation.getAddress().getCountryName()
+        return accommodation.getAddress().getCountryName()
                 + ", "
                 + accommodation.getAddress().getCityName()
                 + ", "

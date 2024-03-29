@@ -1,10 +1,13 @@
 package mate.academy.bookingservice.service.booking;
 
+import java.time.LocalDate;
 import java.util.List;
 import mate.academy.bookingservice.dto.booking.external.CreateBookingRequestDto;
 import mate.academy.bookingservice.dto.booking.external.StatusBookingRequestDto;
 import mate.academy.bookingservice.dto.booking.external.UpdateBookingRequestDto;
 import mate.academy.bookingservice.dto.booking.internal.BookingDto;
+import mate.academy.bookingservice.model.Accommodation;
+import mate.academy.bookingservice.model.Booking;
 import org.springframework.security.core.Authentication;
 
 public interface BookingService {
@@ -23,4 +26,14 @@ public interface BookingService {
     void deleteById(Long id);
 
     List<BookingDto> getBookingsByStatus(String status);
+
+    BookingDto cancelUsersBookingById(Long bookingId, Authentication authentication);
+
+    List<Booking> getBookingsByCheckOutDate(LocalDate now);
+
+    void checkingAvailabilityOfDates(
+            LocalDate checkIn, LocalDate checkOut, Long accommodationId
+    );
+
+    void checkAvailabilityOfAccommodation(Accommodation accommodation);
 }

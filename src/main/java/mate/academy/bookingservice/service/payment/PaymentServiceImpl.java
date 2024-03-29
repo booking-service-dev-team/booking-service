@@ -1,15 +1,16 @@
 package mate.academy.bookingservice.service.payment;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
-import com.stripe.exception.StripeException;
+import com.stripe.model.Customer;
 import com.stripe.model.checkout.Session;
+import java.net.URL;
+import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
+import mate.academy.bookingservice.dto.payment.external.PaymentResponseDto;
 import mate.academy.bookingservice.dto.payment.internal.PaymentInfoDto;
 import mate.academy.bookingservice.exception.EntityNotFoundException;
+import mate.academy.bookingservice.exception.PaymentException;
 import mate.academy.bookingservice.mapper.PaymentMapper;
 import mate.academy.bookingservice.model.Booking;
 import mate.academy.bookingservice.model.Payment;
@@ -17,59 +18,53 @@ import mate.academy.bookingservice.model.User;
 import mate.academy.bookingservice.repository.booking.BookingRepository;
 import mate.academy.bookingservice.repository.payment.PaymentRepository;
 import mate.academy.bookingservice.repository.user.UserRepository;
-import mate.academy.bookingservice.security.JwtUtil;
+import mate.academy.bookingservice.service.booking.BookingService;
 import mate.academy.bookingservice.service.stripe.StripeService;
+import mate.academy.bookingservice.service.user.UserService;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.util.UriComponentsBuilder;
 
-@Component
+@Service
 @RequiredArgsConstructor
 public class PaymentServiceImpl implements PaymentService {
+    public static final String CHECKOUT_SESSION_ID_QUERY_PARAM
+            = "?session_id={CHECKOUT_SESSION_ID}";
+    @Value("${payment-endpoint.success.url}") private String successUrl;
+    @Value("${payment-endpoint.cancel.url}") private String cancelUrl;
     private final PaymentRepository paymentRepository;
     private final BookingRepository bookingRepository;
     private final UserRepository userRepository;
+    private final UserService userService;
     private final PaymentMapper paymentMapper;
     private final StripeService stripeService;
-    private final JwtUtil jwtUtil;
-    @Value("${payment-endpoint.success.url}") String successEndPointUrl;
-    @Value("${payment-endpoint.cancel.url}") String cancelEndPointUrl;
-    @Value("${payment-endpoint.query-parameter.payment-id.name}") String paymentIdQueryParameterName;
-    @Value("${payment-endpoint.query-parameter.ui-url.name}") String uiUrlQueryParameterName;
-    @Override
-    public Payment initPayment(String userEmail, String userToken, Long bookingId, String successPaymentUrl, String cancelPaymentUrl)
-            throws MalformedURLException, StripeException {
-        if(!stripeService.doesCustomerExist(userEmail)) {
-            User user = userRepository.findByEmail(userEmail).orElseThrow(
-                    () -> new EntityNotFoundException("Can't find user by email: " + userEmail)
-            );
-            stripeService
-                    .createCustomer(user.getFirstName() + " " + user.getLastName(), userEmail);
-        }
+    private final BookingService bookingService;
 
-        Booking booking = bookingRepository.findById(bookingId).orElseThrow(
-                () -> new EntityNotFoundException("Can't find booking by id: " + bookingId)
-        );
+    @SneakyThrows
+    @Override
+    @Transactional
+    public Payment initPayment(Long bookingId, String userEmail) {
+        Customer customer = stripeService.getCustomerByEmail(userEmail);
+        Booking booking = getVerifiedBookingWithPendingStatus(bookingId, userEmail);
         Payment payment = new Payment()
                 .setStatus(Payment.Status.PENDING)
                 .setBookingId(booking.getId())
                 .setAmountToPayUsd(booking.getPrice());
         payment = paymentRepository.save(payment);
-        String stripeToken = jwtUtil.generateToken(userToken);
+
         Session stripePaymentSession = stripeService.createStripePaymentSession(
+                payment.getId(),
                 booking.getDescription(),
                 booking.getPrice(),
-                // todo rewrite with URI builder
-                new URL (successEndPointUrl + "?" + paymentIdQueryParameterName + "=" + payment.getId()
-                        + "&" + uiUrlQueryParameterName + "=" + URLEncoder.encode(successPaymentUrl, StandardCharsets.UTF_8)
-                        + "&token=" + stripeToken),
-                new URL (cancelEndPointUrl + "?" + paymentIdQueryParameterName + "=" + payment.getId()
-                        + "&" + uiUrlQueryParameterName + "=" + URLEncoder.encode(cancelPaymentUrl, StandardCharsets.UTF_8)
-                        + "&token=" + stripeToken),
-                userEmail);
-        
+                createUrl(successUrl),
+                createUrl(cancelUrl),
+                customer.getId()
+        );
+
         payment.setSessionUrl(new URL(stripePaymentSession.getUrl()));
         payment.setSessionId(stripePaymentSession.getId());
-
         return paymentRepository.save(payment);
     }
 
@@ -82,15 +77,8 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public String handlePaymentSuccess(Long paymentId, String token) {
-        String originToken = jwtUtil.getSubject(token);
-        String userEmail = jwtUtil.getSubject(originToken);
-        User userByPaymentId = getUserByPaymentId(paymentId);
-        // todo get user by payment id
-        // todo compare useremail with useremail from origin token  & thw secur exp if not eql
-        paymentRepository.updatePaymentStatusById(paymentId, Payment.Status.PAID);
-        // todo handle change booking status
-        return originToken;
+    public PaymentInfoDto getPaymentInfoDtoByLoggedInUser(Authentication authentication) {
+        return getPaymentInfoDtoByUserId(userService.getUserInfo(authentication).getId());
     }
 
     private User getUserByPaymentId(Long paymentId) {
@@ -100,8 +88,27 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public void handlePaymentCancellation(Long paymentId) {
+    public PaymentResponseDto handleSuccess(String checkoutSessionId) {
+        Map<String, String> paymentData = stripeService
+                .getPaymentDataByCheckoutSessionId(checkoutSessionId);
+        paymentData.put("message", "Payment success!");
+        Long paymentId = Long.valueOf(paymentData.get("paymentId"));
+        paymentRepository.updatePaymentStatusById(paymentId, Payment.Status.PAID);
+        Long bookingId = paymentRepository.getBookingIdByPaymentId(paymentId);
+        bookingRepository.updateBookingByIdAndStatus(bookingId, Booking.Status.CONFIRMED);
+        return buildPaymentResponseDto(paymentData);
+    }
+
+    @Override
+    public PaymentResponseDto handleCancel(String checkoutSessionId) {
+        Map<String, String> paymentData = stripeService
+                .getPaymentDataByCheckoutSessionId(checkoutSessionId);
+        paymentData.put("message", "The payment is not successful. Link is valid for 24 hours!");
+        Long paymentId = Long.valueOf(paymentData.get("paymentId"));
         paymentRepository.updatePaymentStatusById(paymentId, Payment.Status.CANCELED);
+        Long bookingId = paymentRepository.getBookingIdByPaymentId(paymentId);
+        bookingRepository.updateBookingByIdAndStatus(bookingId, Booking.Status.CANCELED);
+        return buildPaymentResponseDto(paymentData);
     }
 
     private List<Payment> getPaymentsByUserId(Long userId) {
@@ -113,5 +120,42 @@ public class PaymentServiceImpl implements PaymentService {
                 .map(booking -> paymentRepository.getPaymentsByBookingId(booking.getId()))
                 .flatMap(List<Payment>::stream)
                 .toList();
+    }
+
+    private String createUrl(String url) {
+        return UriComponentsBuilder
+                .fromHttpUrl(url)
+                .toUriString()
+                .concat(CHECKOUT_SESSION_ID_QUERY_PARAM);
+    }
+
+    private Booking getVerifiedBookingWithPendingStatus(Long bookingId, String userEmail) {
+        Booking booking = bookingRepository.findById(bookingId).orElseThrow(
+                () -> new EntityNotFoundException("Can't find booking by id: " + bookingId)
+        );
+        if (!booking.getUser().getEmail().equals(userEmail)) {
+            throw new PaymentException("Access denied! Booking doesn't belong to the user");
+        }
+        if (!booking.getStatus().equals(Booking.Status.PENDING)) {
+            throw new PaymentException(
+                    "This booking with id: " + bookingId + " have status: " + booking.getStatus()
+            );
+        }
+        bookingService.checkingAvailabilityOfDates(
+                booking.getCheckInDate(),
+                booking.getCheckOutDate(),
+                booking.getAccommodation().getId()
+        );
+        bookingService.checkAvailabilityOfAccommodation(booking.getAccommodation());
+        return booking;
+    }
+
+    private PaymentResponseDto buildPaymentResponseDto(Map<String, String> paymentData) {
+        return new PaymentResponseDto(
+                paymentData.get("message"),
+                paymentData.get("paymentId"),
+                paymentData.get("productName"),
+                paymentData.get("customerName")
+        );
     }
 }

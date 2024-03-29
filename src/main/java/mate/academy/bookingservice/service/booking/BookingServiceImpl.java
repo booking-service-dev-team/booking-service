@@ -9,6 +9,7 @@ import mate.academy.bookingservice.dto.booking.external.CreateBookingRequestDto;
 import mate.academy.bookingservice.dto.booking.external.StatusBookingRequestDto;
 import mate.academy.bookingservice.dto.booking.external.UpdateBookingRequestDto;
 import mate.academy.bookingservice.dto.booking.internal.BookingDto;
+import mate.academy.bookingservice.exception.AvailabilityException;
 import mate.academy.bookingservice.exception.EntityNotFoundException;
 import mate.academy.bookingservice.exception.IllegalArgumentException;
 import mate.academy.bookingservice.exception.InvalidDateException;
@@ -20,10 +21,10 @@ import mate.academy.bookingservice.repository.accommodation.AccommodationReposit
 import mate.academy.bookingservice.repository.booking.BookingRepository;
 import mate.academy.bookingservice.repository.user.UserRepository;
 import org.springframework.security.core.Authentication;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-@Component
+@Service
 @RequiredArgsConstructor
 public class BookingServiceImpl implements BookingService {
     private final BookingRepository bookingRepository;
@@ -31,34 +32,45 @@ public class BookingServiceImpl implements BookingService {
     private final UserRepository userRepository;
     private final BookingMapper bookingMapper;
 
+    // todo REFACTORING remove things that do not belong to the functionality of this class
     @SneakyThrows
     @Override
     @Transactional
-    public BookingDto createBooking(CreateBookingRequestDto requestDto, Authentication authentication) {
+    public BookingDto createBooking(
+            CreateBookingRequestDto requestDto,
+            Authentication authentication
+    ) {
         checkingAvailabilityOfDates(requestDto.getCheckInDate(),
                 requestDto.getCheckOutDate(),
                 requestDto.getAccommodationId());
-        Accommodation accommodation = findAccommodationById(requestDto
-                .getAccommodationId(), "create");
-        // todo create logic for check availability and reduction availability.
-        //  maybe reduction availability should doing with change status on CONFIRMED after user payment)
-//        if (accommodation.getNumberOfAvailableAccommodation() > 0) {
-//            accommodation.setNumberOfAvailableAccommodation(
-//                    accommodation.getNumberOfAvailableAccommodation() - 1
-//            );
-//        } else {
-//            throw new InvalidDateException("Accommodation isn't available");
-//        }
-        Accommodation savedAccommodation = accommodationRepository.save(accommodation);
+        Accommodation accommodation = findAccommodationById(requestDto.getAccommodationId());
+        checkAvailabilityOfAccommodation(accommodation);
         Booking booking = new Booking()
                 .setCheckInDate(requestDto.getCheckInDate())
                 .setCheckOutDate(requestDto.getCheckOutDate())
-                .setAccommodation(savedAccommodation)
+                .setAccommodation(accommodation)
                 .setUser(getUserByAuthentication(authentication))
                 .setStatus(Booking.Status.PENDING);
 
         Booking savedBooking = bookingRepository.save(booking);
         return bookingMapper.toDto(savedBooking);
+    }
+
+    @Override
+    public BookingDto cancelUsersBookingById(Long bookingId, Authentication authentication) {
+        List<Booking> bookingsByUser = bookingRepository
+                .getBookingsByUser(getUserByAuthentication(authentication));
+        Booking canceledBooking = bookingsByUser.stream()
+                .filter(b -> b.getId().equals(bookingId)
+                        && b.getStatus().equals(Booking.Status.PENDING))
+                .map(b -> b.setStatus(Booking.Status.CANCELED))
+                .findAny()
+                .orElseThrow(
+                        () -> new EntityNotFoundException(
+                                "Can't find relevant user's booking with id: " + bookingId
+                        )
+                );
+        return bookingMapper.toDto(bookingRepository.save(canceledBooking));
     }
 
     @Override
@@ -109,7 +121,7 @@ public class BookingServiceImpl implements BookingService {
                 .setId(id)
                 .setCheckInDate(requestDto.getCheckInDate())
                 .setCheckOutDate(requestDto.getCheckOutDate())
-                .setAccommodation(findAccommodationById(requestDto.getAccommodationId(), "update"))
+                .setAccommodation(findAccommodationById(requestDto.getAccommodationId()))
                 .setUser(findUserById(requestDto.getUserId()))
                 .setStatus(findBookingStatusValueByStatusName(requestDto
                         .getStatusName()));
@@ -129,49 +141,20 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    public List<Booking> getBookingsByCheckOutDate(LocalDate date) {
+        return bookingRepository.getBookingsByCheckOutDate(date);
+    }
+
+    @Override
     public void deleteById(Long id) {
         bookingRepository.deleteById(id);
     }
 
-    private Booking.Status findBookingStatusValueByStatusName(String statusName)
-            throws IllegalArgumentException {
-        if (Arrays.stream(Booking.Status.values())
-                .map(String::valueOf)
-                .noneMatch(s -> s.equals(statusName.toUpperCase()))) {
-            throw new IllegalArgumentException("Incorrect value of booking status: "
-                    + statusName
-                    + ", use one of: " + Arrays.toString(Booking.Status.values()));
-        } else {
-            return Booking.Status.valueOf(statusName.toUpperCase());
-        }
-    }
-
-    private User findUserById(Long id) {
-        return userRepository.findById(id).orElseThrow(
-                () -> new EntityNotFoundException("Can't find user by id: " + id)
-        );
-    }
-
-    private Accommodation findAccommodationById(Long id, String operation) {
-        return accommodationRepository
-                .findById(id).orElseThrow(
-                        () -> new EntityNotFoundException("Can't " + operation + " booking. "
-                                + "Accommodation with id: " + id
-                                + " isn't exist")
-                );
-    }
-
-    private User getUserByAuthentication(Authentication authentication) {
-        return userRepository.findByEmail(authentication.getName()).orElseThrow(
-                () -> new EntityNotFoundException("Can't find user by email: "
-                        + authentication.getName())
-        );
-    }
-
-    private void checkingAvailabilityOfDates(
+    @SneakyThrows
+    @Override
+    public void checkingAvailabilityOfDates(
             LocalDate checkIn, LocalDate checkOut, Long accommodationId
-    )
-            throws InvalidDateException {
+    ) {
         if (checkIn.isAfter(checkOut) || checkIn.isBefore(LocalDate.now())) {
             throw new InvalidDateException("Invalid date range");
         }
@@ -193,6 +176,48 @@ public class BookingServiceImpl implements BookingService {
                         + booking.getCheckInDate() + " - " + booking.getCheckOutDate());
             }
         }
+    }
+
+    @Override
+    public void checkAvailabilityOfAccommodation(Accommodation accommodation) {
+        if (accommodation.getNumberOfAvailableAccommodation() < 1) {
+            throw new AvailabilityException("Accommodation with id: " + accommodation.getId()
+                    + "isn't available");
+        }
+    }
+
+    private Booking.Status findBookingStatusValueByStatusName(String statusName)
+            throws IllegalArgumentException {
+        if (Arrays.stream(Booking.Status.values())
+                .map(String::valueOf)
+                .noneMatch(s -> s.equals(statusName.toUpperCase()))) {
+            throw new IllegalArgumentException("Incorrect value of booking status: "
+                    + statusName
+                    + ", use one of: " + Arrays.toString(Booking.Status.values()));
+        } else {
+            return Booking.Status.valueOf(statusName.toUpperCase());
+        }
+    }
+
+    private User findUserById(Long id) {
+        return userRepository.findById(id).orElseThrow(
+                () -> new EntityNotFoundException("Can't find user by id: " + id)
+        );
+    }
+
+    private Accommodation findAccommodationById(Long id) {
+        return accommodationRepository
+                .findById(id).orElseThrow(
+                        () -> new EntityNotFoundException("Can't find accommodation with id: "
+                                + id)
+                );
+    }
+
+    private User getUserByAuthentication(Authentication authentication) {
+        return userRepository.findByEmail(authentication.getName()).orElseThrow(
+                () -> new EntityNotFoundException("Can't find user by email: "
+                        + authentication.getName())
+        );
     }
 
     private List<Booking> findBookingsByAccommodationIdAndStatus(

@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Booking management",
         description = "Endpoints for managing bookings.")
 @RestController
-@RequestMapping("/api/bookings")
+@RequestMapping("/bookings")
 @RequiredArgsConstructor
 public class BookingController {
     private final BookingService bookingService;
@@ -36,12 +36,22 @@ public class BookingController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Create new booking",
-            description = "Create new booking")
+            description = "Create new booking that belongs to the logged-in user")
     public BookingDto createBooking(
             @RequestBody @Valid CreateBookingRequestDto requestDto,
             Authentication authentication
     ) {
         return bookingService.createBooking(requestDto, authentication);
+    }
+
+    @PatchMapping("/{bookingId}/cancel")
+    @ResponseStatus(HttpStatus.OK)
+    @Operation(summary = "Cancellation booking by id",
+            description = "Cancellation of one of the user's bookings by booking ID. "
+                    + "Changing booking status from 'PENDING' to 'CANCEL'")
+    public BookingDto cancelBooking(@PathVariable Long bookingId,
+                                   Authentication authentication) {
+        return bookingService.cancelUsersBookingById(bookingId, authentication);
     }
 
     @GetMapping("/")

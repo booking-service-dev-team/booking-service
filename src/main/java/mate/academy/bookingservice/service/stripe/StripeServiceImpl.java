@@ -1,7 +1,5 @@
 package mate.academy.bookingservice.service.stripe;
 
-import java.math.BigDecimal;
-import java.net.URL;
 import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Customer;
@@ -14,17 +12,29 @@ import com.stripe.param.CustomerListParams;
 import com.stripe.param.PriceCreateParams;
 import com.stripe.param.ProductCreateParams;
 import com.stripe.param.checkout.SessionCreateParams;
+import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.Map;
+import lombok.SneakyThrows;
+import mate.academy.bookingservice.exception.CustomStripeException;
+import mate.academy.bookingservice.exception.EntityNotFoundException;
+import mate.academy.bookingservice.model.User;
+import mate.academy.bookingservice.repository.user.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
 public class StripeServiceImpl implements StripeService {
-    public StripeServiceImpl(@Value("${stripe.api.key}") String stripeApiKey) {
+
+    private final UserRepository userRepository;
+
+    public StripeServiceImpl(@Value("${stripe.api.key}") String stripeApiKey,
+                             UserRepository userRepository) {
+        this.userRepository = userRepository;
         Stripe.apiKey = stripeApiKey;
     }
 
-    @Override
-    public void createCustomer(String name, String email) throws StripeException {
+    public Customer createCustomer(String name, String email) throws StripeException {
         CustomerCreateParams params =
                 CustomerCreateParams.builder()
                         .setEmail(email)
@@ -32,16 +42,16 @@ public class StripeServiceImpl implements StripeService {
                         .setName(name)
                         .build();
 
-        Customer customer = Customer.create(params);
+        return Customer.create(params);
     }
 
-    @Override
     public Session createStripePaymentSession(
+            Long paymentId,
             String productName,
             BigDecimal productPrice,
-            URL successUrl,
-            URL cancelUrl,
-            String customerEmail
+            String successUrl,
+            String cancelUrl,
+            String customerId
     ) throws StripeException {
         ProductCreateParams params =
                 ProductCreateParams.builder()
@@ -61,24 +71,73 @@ public class StripeServiceImpl implements StripeService {
 
         SessionCreateParams sessionParams =
                 SessionCreateParams.builder()
-                        .setSuccessUrl(successUrl.toString())
-                        .setCancelUrl(cancelUrl.toString())
+                        .setSuccessUrl(successUrl)
+                        .setCancelUrl(cancelUrl)
                         .addLineItem(
                                 SessionCreateParams.LineItem.builder()
                                         .setPrice(price.getId())
                                         .setQuantity(1L)
                                         .build()
                         )
+                        .putMetadata("productName", productName)
+                        .putMetadata("paymentId", String.valueOf(paymentId))
                         .setMode(SessionCreateParams.Mode.PAYMENT)
-                        .setCustomerEmail(customerEmail)
+                        .setCustomer(customerId)
                         .build();
 
         return Session.create(sessionParams);
     }
 
-    public boolean doesCustomerExist(String email) throws StripeException {
-        CustomerListParams params = CustomerListParams.builder().setLimit(1L).setEmail(email).build();
-        CustomerCollection customers = Customer.list(params);
-        return customers.getData().size() > 0;
+    @SneakyThrows
+    public Session getSessionByCheckoutSessionId(String checkoutSessionId) {
+        Session session;
+        try {
+            session = Session.retrieve(checkoutSessionId);
+        } catch (StripeException e) {
+            throw new CustomStripeException(
+                    e.getMessage(),
+                    e.getRequestId(),
+                    e.getCode(),
+                    e.getStatusCode()
+            );
+        }
+        return session;
+    }
+
+    @SneakyThrows
+    public Customer getCustomerByEmail(String email) {
+        CustomerListParams params = CustomerListParams.builder()
+                .setLimit(1L)
+                .setEmail(email)
+                .build();
+        CustomerCollection customers;
+        try {
+            customers = Customer.list(params);
+        } catch (StripeException e) {
+            throw new CustomStripeException(
+                    e.getMessage(),
+                    e.getRequestId(),
+                    e.getCode(),
+                    e.getStatusCode()
+            );
+        }
+        if (customers.getData().size() > 0) {
+            return customers.getData().get(0);
+        } else {
+            User user = userRepository.findByEmail(email).orElseThrow(
+                    () -> new EntityNotFoundException("Can't find user by email: " + email)
+            );
+            return createCustomer(user.getFirstName() + " " + user.getLastName(), email);
+        }
+    }
+
+    @Override
+    public Map<String, String> getPaymentDataByCheckoutSessionId(String checkoutSessionId) {
+        Session session = getSessionByCheckoutSessionId(checkoutSessionId);
+        Map<String, String> data = new HashMap<>();
+        data.put("paymentId", session.getMetadata().get("paymentId"));
+        data.put("productName", session.getMetadata().get("productName"));
+        data.put("customerName", session.getCustomerDetails().getName());
+        return data;
     }
 }
