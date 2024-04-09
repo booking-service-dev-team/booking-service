@@ -1,9 +1,3 @@
-HELP.md
-target/
-!.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
-src/main/resources/application.properties
 src/main/java/mate/academy/bookingservice/feature/uvecon/re_advert_load_202401102357.json
 src/main/resources/temp
 
