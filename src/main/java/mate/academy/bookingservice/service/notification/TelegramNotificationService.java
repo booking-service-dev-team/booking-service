@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class TelegramNotificationService implements NotificationService {
     private final TelegramBot bot;
+
     @Override
     public void sendMessageToAdmins(String message) {
         bot.sendMessageToAdmins(message);

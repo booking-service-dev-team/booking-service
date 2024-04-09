@@ -25,7 +25,6 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class StripeServiceImpl implements StripeService {
-// todo add StripeConfig
     private final UserRepository userRepository;
 
     public StripeServiceImpl(@Value("${stripe.api.key}") String stripeApiKey,

@@ -36,4 +36,6 @@ public interface BookingService {
     );
 
     void checkAvailabilityOfAccommodation(Accommodation accommodation);
+
+    void filterAllExpiredBookings();
 }

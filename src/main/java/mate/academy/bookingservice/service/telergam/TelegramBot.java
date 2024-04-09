@@ -17,6 +17,7 @@ public class TelegramBot extends TelegramLongPollingBot {
     private final BotConfig config;
 
     private Set<Long> adminChatIds = new HashSet<>();
+
     @Override
     public String getBotUsername() {
 
@@ -34,7 +35,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         String firstName = update.getMessage().getChat().getFirstName();
         String text = update.getMessage().getText();
         Long chatId = update.getMessage().getChatId();
-        if(!adminChatIds.contains(chatId) && text.equals("/start")) {
+        if (!adminChatIds.contains(chatId) && text.equals("/start")) {
             adminChatIds.add(chatId);
             sendMessage("Hello "
                     + firstName
