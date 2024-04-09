@@ -16,6 +16,7 @@ import mate.academy.bookingservice.model.Accommodation;
 import mate.academy.bookingservice.model.Address;
 import mate.academy.bookingservice.repository.accommodation.AccommodationRepository;
 import mate.academy.bookingservice.repository.accommodation.AddressRepository;
+import mate.academy.bookingservice.service.notification.NotificationService;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +27,7 @@ public class AccommodationServiceImpl implements AccommodationService {
     private final AccommodationRepository accommodationRepository;
     private final AddressRepository addressRepository;
     private final AccommodationMapper accommodationMapper;
+    private final NotificationService notificationService;
 
     // todo remove things that do not belong to the functionality of this class
     @SneakyThrows
@@ -45,7 +47,9 @@ public class AccommodationServiceImpl implements AccommodationService {
         accommodation.setPricePerDayUsd(requestDto.getPricePerDayUsd());
         accommodation.setNumberOfAvailableAccommodation(requestDto
                 .getNumberOfAvailableAccommodation());
-        return accommodationMapper.toDto(accommodationRepository.save(accommodation));
+        Accommodation savedAccommodation = accommodationRepository.save(accommodation);
+        sendMessage("Create new accommodation" + createMessageByAccommodation(savedAccommodation));
+        return accommodationMapper.toDto(savedAccommodation);
     }
 
     @Override
@@ -121,5 +125,26 @@ public class AccommodationServiceImpl implements AccommodationService {
         } else {
             return Accommodation.Type.valueOf(typeName.toUpperCase());
         }
+    }
+
+    private void sendMessage(String message) {
+        notificationService.sendMessageToAdmins(message);
+    }
+
+    private String createMessageByAccommodation(Accommodation accommodation) {
+        StringBuilder builder = new StringBuilder();
+        builder.append(System.lineSeparator())
+                .append("accommodation ID: ").append(accommodation.getId())
+                .append(System.lineSeparator())
+                .append("type: ").append(accommodation.getType())
+                .append(System.lineSeparator())
+                .append("size: ").append(accommodation.getSizeOfAccommodation())
+                .append(System.lineSeparator())
+                .append("city: ").append(accommodation.getAddress().getCityName())
+                .append(System.lineSeparator())
+                .append("street: ").append(accommodation.getAddress().getStreetName())
+                .append(System.lineSeparator())
+                .append("number of house: ").append(accommodation.getAddress().getNumberOfHouse());
+        return builder.toString();
     }
 }

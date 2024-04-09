@@ -1,5 +1,6 @@
 package mate.academy.bookingservice.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import mate.academy.bookingservice.dto.payment.external.CreatePaymentRequestDto;
@@ -30,6 +31,12 @@ public class PaymentController {
     private final PaymentService paymentService;
 
     @PostMapping()
+    @Operation(summary = "Initialize payment",
+            description = "Starts the payment process for a specific booking. "
+                    + "First, it will check whether a user with such an email is registered "
+                    + "in the payment system, and if not, it will create one. "
+                    + "After additional checks of the booking, the payment is initiated "
+                    + "directly in the payment system.")
     public ResponseEntity<Object> initPayment(
             Authentication authentication, @RequestBody CreatePaymentRequestDto requestDto
     ) {
@@ -43,6 +50,8 @@ public class PaymentController {
     @GetMapping()
     @ResponseStatus(HttpStatus.OK)
     @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @Operation(summary = "Getting user's payment information by user ID",
+            description = "Getting information about user's payments by user ID. Only for admins.")
     public PaymentInfoDto getPaymentInfoDtoByUserId(
             @RequestParam(name = "user_id") Long userId
     ) {
@@ -51,12 +60,16 @@ public class PaymentController {
 
     @GetMapping("/my")
     @ResponseStatus(HttpStatus.OK)
+    @Operation(summary = "Getting payment information of logged-in user.",
+            description = "Getting payment information of logged-in user.")
     public PaymentInfoDto getPaymentInfoDtoByLoggedInUser(Authentication authentication) {
         return paymentService.getPaymentInfoDtoByLoggedInUser(authentication);
     }
 
     @GetMapping("/success")
     @ResponseStatus(HttpStatus.OK)
+    @Operation(summary = "In case of success payment.",
+            description = "Getting information about success payment.")
     @ResponseBody
     public PaymentResponseDto handleSuccess(
             @RequestParam(name = "session_id") String checkoutSessionId
@@ -66,6 +79,8 @@ public class PaymentController {
 
     @GetMapping("/cancel")
     @ResponseStatus(HttpStatus.OK)
+    @Operation(summary = "In case of cancellation of payment.",
+            description = "Getting information about canceled payment.")
     @ResponseBody
     public PaymentResponseDto handleCancel(
             @RequestParam(name = "session_id") String checkoutSessionId

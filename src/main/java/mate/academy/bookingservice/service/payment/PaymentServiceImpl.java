@@ -14,7 +14,6 @@ import mate.academy.bookingservice.exception.PaymentException;
 import mate.academy.bookingservice.mapper.PaymentMapper;
 import mate.academy.bookingservice.model.Booking;
 import mate.academy.bookingservice.model.Payment;
-import mate.academy.bookingservice.model.User;
 import mate.academy.bookingservice.repository.booking.BookingRepository;
 import mate.academy.bookingservice.repository.payment.PaymentRepository;
 import mate.academy.bookingservice.repository.user.UserRepository;
@@ -79,12 +78,6 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public PaymentInfoDto getPaymentInfoDtoByLoggedInUser(Authentication authentication) {
         return getPaymentInfoDtoByUserId(userService.getUserInfo(authentication).getId());
-    }
-
-    private User getUserByPaymentId(Long paymentId) {
-        Payment payment = paymentRepository.findById(paymentId).get();
-        Booking booking = bookingRepository.findById(payment.getBookingId()).get();
-        return booking.getUser();
     }
 
     @Override

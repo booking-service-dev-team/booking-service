@@ -16,6 +16,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     List<Booking> getBookingsByStatus(Booking.Status status);
 
+    @EntityGraph(attributePaths = {"accommodation", "accommodation.address", "user"})
     List<Booking> getBookingsByUser(User user);
 
     List<Booking> getBookingsByCheckOutDate(LocalDate checkOutDate);
