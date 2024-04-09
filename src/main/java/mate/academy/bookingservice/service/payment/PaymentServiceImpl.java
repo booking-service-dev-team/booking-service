@@ -81,12 +81,6 @@ public class PaymentServiceImpl implements PaymentService {
         return getPaymentInfoDtoByUserId(userService.getUserInfo(authentication).getId());
     }
 
-    private User getUserByPaymentId(Long paymentId) {
-        Payment payment = paymentRepository.findById(paymentId).get();
-        Booking booking = bookingRepository.findById(payment.getBookingId()).get();
-        return booking.getUser();
-    }
-
     @Override
     public PaymentResponseDto handleSuccess(String checkoutSessionId) {
         Map<String, String> paymentData = stripeService

@@ -60,7 +60,7 @@ public class BookingController {
     @Operation(summary = "Get a bookings by user id and/or booking statusName",
             description = "Allows a user with administrator rights to retrieve "
                     + "bookings by user ID and specified status name "
-                    + "or only by status name")
+                    + "or only by status name.")
     public List<BookingDto> getBookingsByUserIdAndStatus(
             @RequestParam(name = "user_id", required = false) Long userId,
             @RequestParam(name = "status") String statusName) {

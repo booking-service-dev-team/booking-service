@@ -20,6 +20,7 @@ import mate.academy.bookingservice.model.User;
 import mate.academy.bookingservice.repository.accommodation.AccommodationRepository;
 import mate.academy.bookingservice.repository.booking.BookingRepository;
 import mate.academy.bookingservice.repository.user.UserRepository;
+import mate.academy.bookingservice.service.notification.NotificationService;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +32,7 @@ public class BookingServiceImpl implements BookingService {
     private final AccommodationRepository accommodationRepository;
     private final UserRepository userRepository;
     private final BookingMapper bookingMapper;
+    private final NotificationService notificationService;
 
     // todo REFACTORING remove things that do not belong to the functionality of this class
     @SneakyThrows
@@ -40,6 +42,7 @@ public class BookingServiceImpl implements BookingService {
             CreateBookingRequestDto requestDto,
             Authentication authentication
     ) {
+        User user = getUserByAuthentication(authentication);
         checkingAvailabilityOfDates(requestDto.getCheckInDate(),
                 requestDto.getCheckOutDate(),
                 requestDto.getAccommodationId());
@@ -49,17 +52,19 @@ public class BookingServiceImpl implements BookingService {
                 .setCheckInDate(requestDto.getCheckInDate())
                 .setCheckOutDate(requestDto.getCheckOutDate())
                 .setAccommodation(accommodation)
-                .setUser(getUserByAuthentication(authentication))
+                .setUser(user)
                 .setStatus(Booking.Status.PENDING);
 
         Booking savedBooking = bookingRepository.save(booking);
+        sendMessage("Create new booking" + createMessageByUserAndBooking(user, booking));
         return bookingMapper.toDto(savedBooking);
     }
 
     @Override
     public BookingDto cancelUsersBookingById(Long bookingId, Authentication authentication) {
+        User user = getUserByAuthentication(authentication);
         List<Booking> bookingsByUser = bookingRepository
-                .getBookingsByUser(getUserByAuthentication(authentication));
+                .getBookingsByUser(user);
         Booking canceledBooking = bookingsByUser.stream()
                 .filter(b -> b.getId().equals(bookingId)
                         && b.getStatus().equals(Booking.Status.PENDING))
@@ -70,6 +75,7 @@ public class BookingServiceImpl implements BookingService {
                                 "Can't find relevant user's booking with id: " + bookingId
                         )
                 );
+        sendMessage("Cancel booking" + createMessageByUserAndBooking(user, canceledBooking));
         return bookingMapper.toDto(bookingRepository.save(canceledBooking));
     }
 
@@ -184,6 +190,19 @@ public class BookingServiceImpl implements BookingService {
             throw new AvailabilityException("Accommodation with id: " + accommodation.getId()
                     + "isn't available");
         }
+    }
+
+    private String createMessageByUserAndBooking(User user, Booking booking) {
+        return System.lineSeparator()
+                + "customer: " + user.getFirstName() + " " + user.getLastName()
+                + System.lineSeparator()
+                + "booking ID: " + booking.getId()
+                + System.lineSeparator()
+                + "description: " + booking.getDescription();
+    }
+
+    private void sendMessage(String message) {
+        notificationService.sendMessageToAdmins(message);
     }
 
     private Booking.Status findBookingStatusValueByStatusName(String statusName)

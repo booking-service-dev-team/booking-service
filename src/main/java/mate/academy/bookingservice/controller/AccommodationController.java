@@ -11,6 +11,7 @@ import mate.academy.bookingservice.dto.accommodation.external.PriceRequestDto;
 import mate.academy.bookingservice.dto.accommodation.internal.AccommodationDto;
 import mate.academy.bookingservice.dto.address.external.AddressRequestDto;
 import mate.academy.bookingservice.service.accommodation.AccommodationService;
+import mate.academy.bookingservice.service.notification.NotificationService;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -31,6 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class AccommodationController {
     private final AccommodationService accommodationService;
+    private final NotificationService notificationService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -66,6 +68,7 @@ public class AccommodationController {
     @Operation(summary = "Get an accommodation by id",
             description = "Get an accommodation by id")
     public AccommodationDto getAccommodationById(@PathVariable Long id) {
+        notificationService.sendMessageToAdmins("IF YOU SEE THIS YOU HAVE SUCCESS!!! accommodation with id: " + id);
         return accommodationService.getById(id);
     }
 
