@@ -66,7 +66,15 @@ public class UserServiceImpl implements UserService {
         return userMapper.toUserResponseDto(userRepository.save(user));
     }
 
-    private User getUserByAuthentication(Authentication authentication) {
+    @Override
+    public User findUserById(Long id) {
+        return userRepository.findById(id).orElseThrow(
+                () -> new EntityNotFoundException("Can't find user by id: " + id)
+        );
+    }
+
+    @Override
+    public User getUserByAuthentication(Authentication authentication) {
         return userRepository.findByEmail(authentication.getName()).orElseThrow(
                 () -> new EntityNotFoundException("Can't find user by email: "
                         + authentication.getName())
