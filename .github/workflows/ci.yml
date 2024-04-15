@@ -37,7 +37,7 @@ jobs:
         
       - name: Print BOT_NAME and BOT_TOKEN
         run: |
-          echo "BOT_NAME: $BOT_NAME"
+          echo "BOT_NAME secret: ${{ secrets.BOT_NAME }}"
           echo "BOT_TOKEN: $BOT_TOKEN"
 
       - name: Wait for PostgreSQL
