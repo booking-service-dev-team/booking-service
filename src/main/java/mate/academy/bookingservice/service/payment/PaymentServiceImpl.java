@@ -18,6 +18,7 @@ import mate.academy.bookingservice.repository.booking.BookingRepository;
 import mate.academy.bookingservice.repository.payment.PaymentRepository;
 import mate.academy.bookingservice.repository.user.UserRepository;
 import mate.academy.bookingservice.service.booking.BookingService;
+import mate.academy.bookingservice.service.notification.NotificationService;
 import mate.academy.bookingservice.service.stripe.StripeService;
 import mate.academy.bookingservice.service.user.UserService;
 import org.springframework.beans.factory.annotation.Value;
@@ -40,6 +41,7 @@ public class PaymentServiceImpl implements PaymentService {
     private final PaymentMapper paymentMapper;
     private final StripeService stripeService;
     private final BookingService bookingService;
+    private final NotificationService notificationService;
 
     @SneakyThrows
     @Override
@@ -89,6 +91,7 @@ public class PaymentServiceImpl implements PaymentService {
         paymentRepository.updatePaymentStatusById(paymentId, Payment.Status.PAID);
         Long bookingId = paymentRepository.getBookingIdByPaymentId(paymentId);
         bookingRepository.updateBookingByIdAndStatus(bookingId, Booking.Status.CONFIRMED);
+        notificationService.sendMessageToAdmins(createMessageByMap(paymentData));
         return buildPaymentResponseDto(paymentData);
     }
 
@@ -150,5 +153,15 @@ public class PaymentServiceImpl implements PaymentService {
                 paymentData.get("productName"),
                 paymentData.get("customerName")
         );
+    }
+
+    private String createMessageByMap(Map<String, String> paymentData) {
+        StringBuilder builder = new StringBuilder();
+        paymentData.forEach((key, value) -> builder
+                .append(key)
+                .append(": ")
+                .append(value)
+                .append(System.lineSeparator()));
+        return builder.toString();
     }
 }

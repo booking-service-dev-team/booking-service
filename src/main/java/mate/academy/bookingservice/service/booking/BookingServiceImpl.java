@@ -22,8 +22,8 @@ import mate.academy.bookingservice.model.User;
 import mate.academy.bookingservice.repository.accommodation.AccommodationRepository;
 import mate.academy.bookingservice.repository.booking.BookingRepository;
 import mate.academy.bookingservice.repository.payment.PaymentRepository;
-import mate.academy.bookingservice.repository.user.UserRepository;
 import mate.academy.bookingservice.service.notification.NotificationService;
+import mate.academy.bookingservice.service.user.UserService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -34,12 +34,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class BookingServiceImpl implements BookingService {
     private final BookingRepository bookingRepository;
     private final AccommodationRepository accommodationRepository;
-    private final UserRepository userRepository;
+    private final UserService userService;
     private final PaymentRepository paymentRepository;
     private final BookingMapper bookingMapper;
     private final NotificationService notificationService;
 
-    // todo REFACTORING remove things that do not belong to the functionality of this class
     @SneakyThrows
     @Override
     @Transactional
@@ -226,6 +225,14 @@ public class BookingServiceImpl implements BookingService {
         bookingRepository.saveAll(bookingsWithCheckOutToday);
     }
 
+    private User findUserById(Long userId) {
+        return userService.findUserById(userId);
+    }
+
+    private User getUserByAuthentication(Authentication authentication) {
+        return userService.getUserByAuthentication(authentication);
+    }
+
     private String createMessageByUserAndBooking(User user, Booking booking) {
         return System.lineSeparator()
                 + "customer: " + user.getFirstName() + " " + user.getLastName()
@@ -252,25 +259,12 @@ public class BookingServiceImpl implements BookingService {
         }
     }
 
-    private User findUserById(Long id) {
-        return userRepository.findById(id).orElseThrow(
-                () -> new EntityNotFoundException("Can't find user by id: " + id)
-        );
-    }
-
     private Accommodation findAccommodationById(Long id) {
         return accommodationRepository
                 .findById(id).orElseThrow(
                         () -> new EntityNotFoundException("Can't find accommodation with id: "
                                 + id)
                 );
-    }
-
-    private User getUserByAuthentication(Authentication authentication) {
-        return userRepository.findByEmail(authentication.getName()).orElseThrow(
-                () -> new EntityNotFoundException("Can't find user by email: "
-                        + authentication.getName())
-        );
     }
 
     private List<Booking> findBookingsByAccommodationIdAndStatus(

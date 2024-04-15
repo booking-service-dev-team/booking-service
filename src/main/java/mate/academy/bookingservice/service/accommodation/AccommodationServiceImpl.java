@@ -29,7 +29,6 @@ public class AccommodationServiceImpl implements AccommodationService {
     private final AccommodationMapper accommodationMapper;
     private final NotificationService notificationService;
 
-    // todo remove things that do not belong to the functionality of this class
     @SneakyThrows
     @Override
     public AccommodationDto save(CreateAccommodationRequestDto requestDto) {
