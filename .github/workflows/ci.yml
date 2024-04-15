@@ -26,20 +26,13 @@ jobs:
           distribution: 'adopt'
           cache: maven
 
-      - name: Use BOT_NAME secret
-        env:
-          BOT_NAME: ${{ secrets.BOT_NAME }}
-        run: echo "Using BOT_NAME secret"
-
-      - name: Use BOT_TOKEN secret
-        env:
-          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
-        run: echo "Using BOT_TOKEN secret"
+      - name: Set up environment variables
+        run: cp .env $GITHUB_WORKSPACE
 
       - name: Print BOT_NAME and BOT_TOKEN
         run: |
-          echo "BOT_NAME secret: ${{ secrets.BOT_NAME }}"
-          echo "BOT_TOKEN secret: ${{ secrets.BOT_TOKEN }}"
+          echo "BOT_NAME: $BOT_NAME"
+          echo "BOT_TOKEN: $BOT_TOKEN"
 
       - name: Wait for PostgreSQL
         id: wait-for-postgres
