@@ -28,9 +28,11 @@ jobs:
       - name: Use BOT_NAME secret
         env:
           BOT_NAME: ${{ secrets.BOT_NAME }}
+        run: echo "Using BOT_NAME secret"
       - name: Use BOT_TOKEN secret
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+        run: echo "Using BOT_TOKEN secret"
       - name: Wait for PostgreSQL
         id: wait-for-postgres
         run: echo "Waiting for PostgreSQL to be ready..." && sleep 20
