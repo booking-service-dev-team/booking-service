@@ -30,6 +30,7 @@ jobs:
         env:
           BOT_NAME: ${{ secrets.BOT_NAME }}
         run: echo "Using BOT_NAME secret"
+
       - name: Use BOT_TOKEN secret
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
