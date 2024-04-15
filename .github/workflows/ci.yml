@@ -25,12 +25,19 @@ jobs:
           java-version: '17'
           distribution: 'adopt'
           cache: maven
+      
       - name: Use BOT_NAME secret
         env:
           BOT_NAME: ${{ secrets.BOT_NAME }}
       - name: Use BOT_TOKEN secret
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+      
+      - name: Print BOT_NAME and BOT_TOKEN
+        run: |
+          echo "BOT_NAME: $BOT_NAME"
+          echo "BOT_TOKEN: $BOT_TOKEN"
+
       - name: Wait for PostgreSQL
         id: wait-for-postgres
         run: echo "Waiting for PostgreSQL to be ready..." && sleep 20
