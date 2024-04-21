@@ -1,0 +1,43 @@
+version: "3.8"
+services:
+  postgres-db:
+    image: postgres
+    restart: always
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: $POSTGRES_USER
+      POSTGRES_PASSWORD: $POSTGRES_PASSWORD
+      POSTGRES_DB: $POSTGRES_DB
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+    ports:
+      - "$POSTGRES_LOCAL_PORT:$POSTGRES_DOCKER_PORT"
+
+  app:
+    build: .
+    image: booking-app
+    depends_on:
+      - postgres-db
+    restart: on-failure
+    env_file:
+      - .env
+    ports:
+      - "$SPRING_LOCAL_PORT:$SPRING_DOCKER_PORT"
+#      - "$DEBUG_PORT:$DEBUG_PORT"
+    environment:
+      SPRING_APPLICATION_JSON: '{
+        "spring.datasource.url" : "jdbc:postgresql://postgres-db:$POSTGRES_DOCKER_PORT/$POSTGRES_DB",
+        "spring.datasource.username" : "$POSTGRES_USER",
+        "spring.datasource.password" : "$POSTGRES_PASSWORD",
+        "spring.liquibase.change-log" : "/db/changelog/db.changelog-master.yaml",
+        "jwt.expiration" : "$JWT_EXPIRATION",
+        "jwt.secret" : "$JWT_SECRET",
+        "stripe.api.key" : "$STRIPE_API_KEY",
+        "bot.name" : "$BOT_NAME",
+        "bot.token" : "$BOT_TOKEN"
+      }'
+#      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
