@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
@@ -43,7 +42,6 @@ class AccommodationServiceTest {
     @InjectMocks
     private AccommodationServiceImpl accommodationService;
 
-    // todo rewrite this shit
     @Test
     @DisplayName("Successfully created a new accommodation")
     void save_WithValidRequestDto_Success() {
@@ -66,7 +64,6 @@ class AccommodationServiceTest {
                 .setNumberOfHouse(requestDto.getNumberOfHouse());
 
         Accommodation accommodation = new Accommodation();
-        accommodation.setId(1L);
         accommodation.setAddress(savedAddress);
         accommodation.setType(Accommodation.Type.HOUSE);
         accommodation.setAmenities(requestDto.getAmenities());
@@ -75,8 +72,18 @@ class AccommodationServiceTest {
         accommodation.setNumberOfAvailableAccommodation(requestDto
                 .getNumberOfAvailableAccommodation());
 
+        Accommodation savedAccommodation = new Accommodation();
+        savedAccommodation.setId(1L);
+        savedAccommodation.setAddress(savedAddress);
+        savedAccommodation.setType(Accommodation.Type.HOUSE);
+        savedAccommodation.setAmenities(requestDto.getAmenities());
+        savedAccommodation.setSizeOfAccommodation(requestDto.getSizeOfAccommodation());
+        savedAccommodation.setPricePerDayUsd(requestDto.getPricePerDayUsd());
+        savedAccommodation.setNumberOfAvailableAccommodation(requestDto
+                .getNumberOfAvailableAccommodation());
+
         AccommodationDto expected = new AccommodationDto()
-                .setId(accommodation.getId())
+                .setId(savedAccommodation.getId())
                 .setType("HOUSE")
                 .setAddress(new AddressDto()
                         .setId(savedAddress.getId())
@@ -84,16 +91,15 @@ class AccommodationServiceTest {
                         .setCityName(savedAddress.getCityName())
                         .setStreetName(savedAddress.getStreetName())
                         .setNumberOfHouse(savedAddress.getNumberOfHouse()))
-                .setSizeOfAccommodation(accommodation.getSizeOfAccommodation())
-                .setAmenities(accommodation.getAmenities())
-                .setPricePerDayUsd(accommodation.getPricePerDayUsd())
-                .setNumberOfAvailableAccommodation(accommodation.getNumberOfAvailableAccommodation());
+                .setSizeOfAccommodation(savedAccommodation.getSizeOfAccommodation())
+                .setAmenities(savedAccommodation.getAmenities())
+                .setPricePerDayUsd(savedAccommodation.getPricePerDayUsd())
+                .setNumberOfAvailableAccommodation(savedAccommodation
+                        .getNumberOfAvailableAccommodation());
 
         when(addressRepository.save(any(Address.class))).thenReturn(savedAddress);
-        doReturn(accommodation).when(accommodationRepository).save(
-                any(Accommodation.class)
-        );
-        when(accommodationMapper.toDto(accommodation)).thenReturn(expected);
+        when(accommodationRepository.save(accommodation)).thenReturn(savedAccommodation);
+        when(accommodationMapper.toDto(savedAccommodation)).thenReturn(expected);
 
         AccommodationDto actual = accommodationService.save(requestDto);
 
@@ -126,7 +132,7 @@ class AccommodationServiceTest {
                 ));
 
         assertThrows(EntityNotFoundException.class, () -> {
-           accommodationService.getById(notValidId);
+            accommodationService.getById(notValidId);
         });
     }
 
