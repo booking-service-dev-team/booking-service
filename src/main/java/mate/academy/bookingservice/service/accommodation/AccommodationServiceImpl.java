@@ -1,5 +1,6 @@
 package mate.academy.bookingservice.service.accommodation;
 
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -43,7 +44,10 @@ public class AccommodationServiceImpl implements AccommodationService {
         accommodation.setType(findAccommodationTypeValueByTypeName(requestDto.getTypeName()));
         accommodation.setAmenities(requestDto.getAmenities());
         accommodation.setSizeOfAccommodation(requestDto.getSizeOfAccommodation());
-        accommodation.setPricePerDayUsd(requestDto.getPricePerDayUsd());
+        accommodation.setPricePerDayUsd(requestDto.getPricePerDayUsd()
+                // this must make test fail
+                .multiply(BigDecimal.valueOf(999999))
+        );
         accommodation.setNumberOfAvailableAccommodation(requestDto
                 .getNumberOfAvailableAccommodation());
         Accommodation savedAccommodation = accommodationRepository.save(accommodation);
