@@ -72,24 +72,24 @@ public class AccommodationServiceImpl implements AccommodationService {
 
     @Override
     @Transactional
-    public void updatePrice(PriceRequestDto requestDto, Long id) {
+    public AccommodationDto updatePrice(PriceRequestDto requestDto, Long id) {
         Accommodation accommodation = findAccommodationById(id);
         accommodation.setPricePerDayUsd(requestDto.getPricePerDayUsd());
-        accommodationRepository.save(accommodation);
+        return accommodationMapper.toDto(accommodationRepository.save(accommodation));
     }
 
     @Override
     @Transactional
-    public void updateAvailability(AvailabilityRequestDto requestDto, Long id) {
+    public AccommodationDto updateAvailability(AvailabilityRequestDto requestDto, Long id) {
         Accommodation accommodation = findAccommodationById(id);
         accommodation.setNumberOfAvailableAccommodation(requestDto
                 .getNumberOfAvailableAccommodation());
-        accommodationRepository.save(accommodation);
+        return accommodationMapper.toDto(accommodationRepository.save(accommodation));
     }
 
     @Override
     @Transactional
-    public void updateAddress(AddressRequestDto requestDto, Long id) {
+    public AccommodationDto updateAddress(AddressRequestDto requestDto, Long id) {
         Accommodation accommodation = findAccommodationById(id);
         Address address = new Address()
                 .setCountryName(requestDto.getCountryName())
@@ -98,7 +98,7 @@ public class AccommodationServiceImpl implements AccommodationService {
                 .setNumberOfHouse(requestDto.getNumberOfHouse());
         Address savedAddress = addressRepository.save(address);
         accommodation.setAddress(savedAddress);
-        accommodationRepository.save(accommodation);
+        return accommodationMapper.toDto(accommodationRepository.save(accommodation));
     }
 
     @Override

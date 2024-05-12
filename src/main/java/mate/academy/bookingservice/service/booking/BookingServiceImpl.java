@@ -65,17 +65,6 @@ public class BookingServiceImpl implements BookingService {
         return bookingMapper.toDto(savedBooking);
     }
 
-    private void verificationOfUserPayments(User user) {
-        List<Booking> bookingsByUser = bookingRepository.getBookingsByUser(user);
-        boolean availabilityOfPaymentWithPendingStatus = bookingsByUser.stream()
-                .map(booking -> paymentRepository.getPaymentsByBookingId(booking.getId()))
-                .flatMap(List::stream)
-                .anyMatch(payment -> payment.getStatus().equals(Payment.Status.PENDING));
-        if (availabilityOfPaymentWithPendingStatus) {
-            throw new PaymentException("Can't create booking. User have pending payment.");
-        }
-    }
-
     @Override
     public BookingDto cancelUsersBookingById(Long bookingId, Authentication authentication) {
         User user = getUserByAuthentication(authentication);
@@ -160,11 +149,6 @@ public class BookingServiceImpl implements BookingService {
         booking.setStatus(findBookingStatusValueByStatusName(requestDto.statusName()));
         Booking savedUpdatedBooking = bookingRepository.save(booking);
         return bookingMapper.toDto(savedUpdatedBooking);
-    }
-
-    @Override
-    public List<Booking> getBookingsByCheckOutDate(LocalDate date) {
-        return bookingRepository.getBookingsByCheckOutDate(date);
     }
 
     @Override
@@ -276,5 +260,16 @@ public class BookingServiceImpl implements BookingService {
     private boolean isDateInRange(LocalDate dateToCheck, LocalDate startDate, LocalDate endDate) {
         return dateToCheck.isAfter(startDate.minusDays(1))
                 && dateToCheck.isBefore(endDate.plusDays(1));
+    }
+
+    private void verificationOfUserPayments(User user) {
+        List<Booking> bookingsByUser = bookingRepository.getBookingsByUser(user);
+        boolean availabilityOfPaymentWithPendingStatus = bookingsByUser.stream()
+                .map(booking -> paymentRepository.getPaymentsByBookingId(booking.getId()))
+                .flatMap(List::stream)
+                .anyMatch(payment -> payment.getStatus().equals(Payment.Status.PENDING));
+        if (availabilityOfPaymentWithPendingStatus) {
+            throw new PaymentException("Can't create booking. User have pending payment.");
+        }
     }
 }

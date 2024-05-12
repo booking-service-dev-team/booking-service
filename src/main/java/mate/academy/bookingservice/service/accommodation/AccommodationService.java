@@ -17,11 +17,11 @@ public interface AccommodationService {
 
     AccommodationDto getById(Long id);
 
-    void updatePrice(PriceRequestDto requestDto, Long id);
+    AccommodationDto updatePrice(PriceRequestDto requestDto, Long id);
 
-    void updateAvailability(AvailabilityRequestDto requestDto, Long id);
+    AccommodationDto updateAvailability(AvailabilityRequestDto requestDto, Long id);
 
-    void updateAddress(AddressRequestDto requestDto, Long id);
+    AccommodationDto updateAddress(AddressRequestDto requestDto, Long id);
 
     void deleteById(Long id);
 }
