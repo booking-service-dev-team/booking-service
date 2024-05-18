@@ -10,7 +10,6 @@ import lombok.SneakyThrows;
 import mate.academy.bookingservice.dto.payment.external.PaymentResponseDto;
 import mate.academy.bookingservice.dto.payment.internal.PaymentInfoDto;
 import mate.academy.bookingservice.exception.EntityNotFoundException;
-import mate.academy.bookingservice.exception.PaymentException;
 import mate.academy.bookingservice.mapper.PaymentMapper;
 import mate.academy.bookingservice.model.Booking;
 import mate.academy.bookingservice.model.Payment;
@@ -48,7 +47,7 @@ public class PaymentServiceImpl implements PaymentService {
     @Transactional
     public Payment initPayment(Long bookingId, String userEmail) {
         Customer customer = stripeService.getCustomerByEmail(userEmail);
-        Booking booking = getVerifiedBookingWithPendingStatus(bookingId, userEmail);
+        Booking booking = bookingService.getVerifiedBookingWithPendingStatus(bookingId, userEmail);
         Payment payment = new Payment()
                 .setStatus(Payment.Status.PENDING)
                 .setBookingId(booking.getId())
@@ -123,27 +122,6 @@ public class PaymentServiceImpl implements PaymentService {
                 .fromHttpUrl(url)
                 .toUriString()
                 .concat(CHECKOUT_SESSION_ID_QUERY_PARAM);
-    }
-
-    private Booking getVerifiedBookingWithPendingStatus(Long bookingId, String userEmail) {
-        Booking booking = bookingRepository.findById(bookingId).orElseThrow(
-                () -> new EntityNotFoundException("Can't find booking by id: " + bookingId)
-        );
-        if (!booking.getUser().getEmail().equals(userEmail)) {
-            throw new PaymentException("Access denied! Booking doesn't belong to the user");
-        }
-        if (!booking.getStatus().equals(Booking.Status.PENDING)) {
-            throw new PaymentException(
-                    "This booking with id: " + bookingId + " have status: " + booking.getStatus()
-            );
-        }
-        bookingService.checkingAvailabilityOfDates(
-                booking.getCheckInDate(),
-                booking.getCheckOutDate(),
-                booking.getAccommodation().getId()
-        );
-        bookingService.checkAvailabilityOfAccommodation(booking.getAccommodation());
-        return booking;
     }
 
     private PaymentResponseDto buildPaymentResponseDto(Map<String, String> paymentData) {

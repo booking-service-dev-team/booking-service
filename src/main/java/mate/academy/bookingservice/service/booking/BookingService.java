@@ -7,6 +7,7 @@ import mate.academy.bookingservice.dto.booking.external.StatusBookingRequestDto;
 import mate.academy.bookingservice.dto.booking.external.UpdateBookingRequestDto;
 import mate.academy.bookingservice.dto.booking.internal.BookingDto;
 import mate.academy.bookingservice.model.Accommodation;
+import mate.academy.bookingservice.model.Booking;
 import org.springframework.security.core.Authentication;
 
 public interface BookingService {
@@ -35,4 +36,6 @@ public interface BookingService {
     void checkAvailabilityOfAccommodation(Accommodation accommodation);
 
     void filterAllExpiredBookings();
+
+    Booking getVerifiedBookingWithPendingStatus(Long bookingId, String userEmail);
 }

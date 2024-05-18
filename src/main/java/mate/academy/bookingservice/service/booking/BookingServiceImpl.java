@@ -116,9 +116,7 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public BookingDto getById(Long id) {
-        Booking booking = bookingRepository.findById(id).orElseThrow(
-                () -> new EntityNotFoundException("Can't find booking by id: " + id)
-        );
+        Booking booking = findById(id);
         return bookingMapper.toDto(booking);
     }
 
@@ -209,6 +207,26 @@ public class BookingServiceImpl implements BookingService {
         bookingRepository.saveAll(bookingsWithCheckOutToday);
     }
 
+    @Override
+    public Booking getVerifiedBookingWithPendingStatus(Long bookingId, String userEmail) {
+        Booking booking = findById(bookingId);
+        if (!booking.getUser().getEmail().equals(userEmail)) {
+            throw new PaymentException("Access denied! Booking doesn't belong to the user");
+        }
+        if (!booking.getStatus().equals(Booking.Status.PENDING)) {
+            throw new PaymentException(
+                    "This booking with id: " + bookingId + " have status: " + booking.getStatus()
+            );
+        }
+        checkingAvailabilityOfDates(
+                booking.getCheckInDate(),
+                booking.getCheckOutDate(),
+                booking.getAccommodation().getId()
+        );
+        checkAvailabilityOfAccommodation(booking.getAccommodation());
+        return booking;
+    }
+
     private User findUserById(Long userId) {
         return userService.findUserById(userId);
     }
@@ -271,5 +289,11 @@ public class BookingServiceImpl implements BookingService {
         if (availabilityOfPaymentWithPendingStatus) {
             throw new PaymentException("Can't create booking. User have pending payment.");
         }
+    }
+
+    private Booking findById(Long bookingId) {
+        return bookingRepository.findById(bookingId).orElseThrow(
+                () -> new EntityNotFoundException("Can't find booking by id: " + bookingId)
+        );
     }
 }
