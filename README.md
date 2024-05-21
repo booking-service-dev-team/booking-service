@@ -80,6 +80,7 @@ Assurance of the confidentiality of personal information and user security.
 - get a list of all payments of user by id
 - handling successful/unsuccessful payment
 
+(coming soon)
 ### Startup instructions
 ...
 ### Postman
