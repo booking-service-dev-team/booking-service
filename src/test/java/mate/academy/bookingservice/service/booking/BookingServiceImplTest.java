@@ -369,7 +369,7 @@ class BookingServiceImplTest {
         when(bookingRepository.save(canceledBooking)).thenReturn(canceledBooking);
         when(bookingMapper.toDto(canceledBooking)).thenReturn(expected);
 
-        BookingDto actual = bookingService.cancelUsersBookingById(bookingId, authentication);
+        BookingDto actual = bookingService.cancellationUsersBookingById(bookingId, authentication);
 
         assertEquals(expected, actual);
     }
@@ -404,7 +404,7 @@ class BookingServiceImplTest {
         when(bookingRepository.getBookingsByUser(user)).thenReturn(List.of(booking));
 
         assertThrows(EntityNotFoundException.class, () -> {
-            bookingService.cancelUsersBookingById(bookingId, authentication);
+            bookingService.cancellationUsersBookingById(bookingId, authentication);
         });
     }
 

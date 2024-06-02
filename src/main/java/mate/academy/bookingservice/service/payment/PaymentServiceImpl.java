@@ -9,13 +9,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import mate.academy.bookingservice.dto.payment.external.PaymentResponseDto;
 import mate.academy.bookingservice.dto.payment.internal.PaymentInfoDto;
-import mate.academy.bookingservice.exception.EntityNotFoundException;
 import mate.academy.bookingservice.mapper.PaymentMapper;
 import mate.academy.bookingservice.model.Booking;
 import mate.academy.bookingservice.model.Payment;
 import mate.academy.bookingservice.repository.booking.BookingRepository;
 import mate.academy.bookingservice.repository.payment.PaymentRepository;
-import mate.academy.bookingservice.repository.user.UserRepository;
 import mate.academy.bookingservice.service.booking.BookingService;
 import mate.academy.bookingservice.service.notification.NotificationService;
 import mate.academy.bookingservice.service.stripe.StripeService;
@@ -35,7 +33,6 @@ public class PaymentServiceImpl implements PaymentService {
     @Value("${payment-endpoint.cancel.url}") private String cancelUrl;
     private final PaymentRepository paymentRepository;
     private final BookingRepository bookingRepository;
-    private final UserRepository userRepository;
     private final UserService userService;
     private final PaymentMapper paymentMapper;
     private final StripeService stripeService;
@@ -107,10 +104,8 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     private List<Payment> getPaymentsByUserId(Long userId) {
-        List<Booking> bookingsByUser = bookingRepository
-                .getBookingsByUser(userRepository.findById(userId).orElseThrow(
-                        () -> new EntityNotFoundException("Can't find user by id: " + userId)
-                ));
+        List<Booking> bookingsByUser = bookingService
+                .getBookingsByUser(userService.findUserById(userId));
         return bookingsByUser.stream()
                 .map(booking -> paymentRepository.getPaymentsByBookingId(booking.getId()))
                 .flatMap(List<Payment>::stream)
