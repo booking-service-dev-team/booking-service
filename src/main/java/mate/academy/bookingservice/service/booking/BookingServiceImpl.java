@@ -66,10 +66,9 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public BookingDto cancelUsersBookingById(Long bookingId, Authentication authentication) {
+    public BookingDto cancellationUsersBookingById(Long bookingId, Authentication authentication) {
         User user = getUserByAuthentication(authentication);
-        List<Booking> bookingsByUser = bookingRepository
-                .getBookingsByUser(user);
+        List<Booking> bookingsByUser = getBookingsByUser(user);
         Booking canceledBooking = bookingsByUser.stream()
                 .filter(b -> b.getId().equals(bookingId)
                         && b.getStatus().equals(Booking.Status.PENDING))
@@ -107,8 +106,7 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public List<BookingDto> getAllBookingsOfLoggedInUser(Authentication authentication) {
-        List<Booking> bookingsByUser = bookingRepository
-                .getBookingsByUser(getUserByAuthentication(authentication));
+        List<Booking> bookingsByUser = getBookingsByUser(getUserByAuthentication(authentication));
         return bookingsByUser.stream()
                 .map(bookingMapper::toDto)
                 .toList();
@@ -227,6 +225,11 @@ public class BookingServiceImpl implements BookingService {
         return booking;
     }
 
+    @Override
+    public List<Booking> getBookingsByUser(User user) {
+        return bookingRepository.getBookingsByUser(user);
+    }
+
     private User findUserById(Long userId) {
         return userService.findUserById(userId);
     }
@@ -281,7 +284,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     private void verificationOfUserPayments(User user) {
-        List<Booking> bookingsByUser = bookingRepository.getBookingsByUser(user);
+        List<Booking> bookingsByUser = getBookingsByUser(user);
         boolean availabilityOfPaymentWithPendingStatus = bookingsByUser.stream()
                 .map(booking -> paymentRepository.getPaymentsByBookingId(booking.getId()))
                 .flatMap(List::stream)

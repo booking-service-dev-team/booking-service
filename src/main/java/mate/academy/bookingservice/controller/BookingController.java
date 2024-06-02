@@ -51,7 +51,7 @@ public class BookingController {
                     + "Changing booking status from 'PENDING' to 'CANCEL'")
     public BookingDto cancelBooking(@PathVariable Long bookingId,
                                    Authentication authentication) {
-        return bookingService.cancelUsersBookingById(bookingId, authentication);
+        return bookingService.cancellationUsersBookingById(bookingId, authentication);
     }
 
     @GetMapping("/")

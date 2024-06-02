@@ -8,14 +8,20 @@ import mate.academy.bookingservice.dto.booking.external.UpdateBookingRequestDto;
 import mate.academy.bookingservice.dto.booking.internal.BookingDto;
 import mate.academy.bookingservice.model.Accommodation;
 import mate.academy.bookingservice.model.Booking;
+import mate.academy.bookingservice.model.User;
 import org.springframework.security.core.Authentication;
 
 public interface BookingService {
-    BookingDto createBooking(CreateBookingRequestDto requestDto, Authentication authentication);
 
     List<BookingDto> getBookingsByUserIdAndStatus(Long userId, String status);
 
     List<BookingDto> getAllBookingsOfLoggedInUser(Authentication authentication);
+
+    List<BookingDto> getBookingsByStatus(String status);
+
+    List<Booking> getBookingsByUser(User user);
+
+    BookingDto createBooking(CreateBookingRequestDto requestDto, Authentication authentication);
 
     BookingDto getById(Long id);
 
@@ -23,19 +29,15 @@ public interface BookingService {
 
     BookingDto updateBookingStatusById(Long id, StatusBookingRequestDto requestDto);
 
+    BookingDto cancellationUsersBookingById(Long bookingId, Authentication authentication);
+
+    Booking getVerifiedBookingWithPendingStatus(Long bookingId, String userEmail);
+
     void deleteById(Long id);
 
-    List<BookingDto> getBookingsByStatus(String status);
-
-    BookingDto cancelUsersBookingById(Long bookingId, Authentication authentication);
-
-    void checkingAvailabilityOfDates(
-            LocalDate checkIn, LocalDate checkOut, Long accommodationId
-    );
+    void checkingAvailabilityOfDates(LocalDate checkIn, LocalDate checkOut, Long accommodationId);
 
     void checkAvailabilityOfAccommodation(Accommodation accommodation);
 
     void filterAllExpiredBookings();
-
-    Booking getVerifiedBookingWithPendingStatus(Long bookingId, String userEmail);
 }
