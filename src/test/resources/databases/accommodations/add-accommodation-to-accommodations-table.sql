@@ -1,0 +1,2 @@
+insert into accommodations (id, address_id, type, size_of_accommodation, amenities, price_per_day_usd, number_of_available_accommodation)
+values (1, 11, 'APARTMENT', 'big house', 'fireplace, hall in the wall', 100.00, 1);
