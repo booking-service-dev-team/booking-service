@@ -27,7 +27,6 @@ import mate.academy.bookingservice.dto.address.external.AddressRequestDto;
 import mate.academy.bookingservice.dto.address.internal.AddressDto;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -48,7 +47,7 @@ import org.springframework.web.context.WebApplicationContext;
 public class AccommodationControllerTest extends AbstractIntegrationTest {
     // todo change groupId
 
-    protected static MockMvc mockMvc;
+    private MockMvc mockMvc;
     @Autowired
     private DataSource dataSource;
     @Autowired
@@ -56,17 +55,13 @@ public class AccommodationControllerTest extends AbstractIntegrationTest {
     @Autowired
     private WebApplicationContext applicationContext;
 
-    @BeforeAll
-    static void beforeAll(WebApplicationContext applicationContext) {
+    @SneakyThrows
+    @BeforeEach
+    void initializeAccommodationsAndAddressesTables(TestInfo testInfo) {
         mockMvc = MockMvcBuilders
                 .webAppContextSetup(applicationContext)
                 .apply(springSecurity())
                 .build();
-    }
-
-    @SneakyThrows
-    @BeforeEach
-    void initializeAccommodationsAndAddressesTables(TestInfo testInfo) {
         if (testInfo.getTags().contains("IWantToInitialize")) {
             try (Connection connection = dataSource.getConnection()) {
                 connection.setAutoCommit(true);
