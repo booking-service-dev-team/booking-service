@@ -90,15 +90,18 @@ public class AccommodationController {
         return accommodationService.updateAvailability(requestDto, id);
     }
 
-    @Operation(summary = "Accommodation address update by id",
-            description = "Accommodation address update by id. "
-                    + "The country, city, street and house number should be indicated")
-    @PatchMapping("/{id}/address")
+    @Operation(summary = "Accommodation address update by accommodation id",
+            description = """
+                            Accommodation address update by accommodation id.
+                            The country, city, street and house number should be indicated
+                            """
+    )
+    @PatchMapping("/{accommodationId}/address")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @ResponseStatus(HttpStatus.OK)
     public AccommodationDto updateAddress(@RequestBody @Valid AddressRequestDto requestDto,
-                                   @PathVariable Long id) {
-        return accommodationService.updateAddress(requestDto, id);
+                                   @PathVariable Long accommodationId) {
+        return accommodationService.updateAddress(requestDto, accommodationId);
     }
 
     @Operation(summary = "Delete an accommodation by id",

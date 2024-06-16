@@ -1,4 +1,4 @@
-package mate.academy.bookingservice.unit.booking;
+package mate.academy.bookingservice.service.booking;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -26,7 +26,6 @@ import mate.academy.bookingservice.model.User;
 import mate.academy.bookingservice.repository.accommodation.AccommodationRepository;
 import mate.academy.bookingservice.repository.booking.BookingRepository;
 import mate.academy.bookingservice.repository.payment.PaymentRepository;
-import mate.academy.bookingservice.service.booking.BookingServiceImpl;
 import mate.academy.bookingservice.service.notification.NotificationService;
 import mate.academy.bookingservice.service.user.UserService;
 import org.junit.jupiter.api.DisplayName;

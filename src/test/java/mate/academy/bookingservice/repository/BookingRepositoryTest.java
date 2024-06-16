@@ -1,10 +1,10 @@
-package mate.academy.bookingservice.integrational.repository;
+package mate.academy.bookingservice.repository;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Optional;
-import mate.academy.bookingservice.integrational.AbstractIntegrationTest;
+import mate.academy.bookingservice.AbstractIntegrationTest;
 import mate.academy.bookingservice.model.Booking;
 import mate.academy.bookingservice.repository.booking.BookingRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -25,8 +25,8 @@ public class BookingRepositoryTest extends AbstractIntegrationTest {
     @DisplayName("Successfully update booking status by id and Booking Status")
     @Sql(scripts = {
             "classpath:databases/users/add-user-to-users-table.sql",
-            "classpath:databases/addresses/add-address-to-addresses-table.sql",
-            "classpath:databases/accommodations/add-accommodation-to-accommodations-table.sql",
+            "classpath:databases/addresses/add-addresses-to-addresses-table.sql",
+            "classpath:databases/accommodations/add-accommodations-to-accommodations-table.sql",
             "classpath:databases/bookings/add-booking-to-bookings-table.sql"
     }, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
     @Sql(scripts = {

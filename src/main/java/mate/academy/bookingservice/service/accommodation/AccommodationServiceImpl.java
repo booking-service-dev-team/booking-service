@@ -89,8 +89,8 @@ public class AccommodationServiceImpl implements AccommodationService {
 
     @Override
     @Transactional
-    public AccommodationDto updateAddress(AddressRequestDto requestDto, Long id) {
-        Accommodation accommodation = findAccommodationById(id);
+    public AccommodationDto updateAddress(AddressRequestDto requestDto, Long accommodationId) {
+        Accommodation accommodation = findAccommodationById(accommodationId);
         Address address = new Address()
                 .setCountryName(requestDto.getCountryName())
                 .setCityName(requestDto.getCityName())

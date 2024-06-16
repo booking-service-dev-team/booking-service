@@ -21,7 +21,7 @@ public interface AccommodationService {
 
     AccommodationDto updateAvailability(AvailabilityRequestDto requestDto, Long id);
 
-    AccommodationDto updateAddress(AddressRequestDto requestDto, Long id);
+    AccommodationDto updateAddress(AddressRequestDto requestDto, Long accommodationId);
 
     void deleteById(Long id);
 }
