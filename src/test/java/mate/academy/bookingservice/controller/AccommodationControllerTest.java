@@ -53,9 +53,11 @@ public class AccommodationControllerTest extends AbstractIntegrationTest {
     private DataSource dataSource;
     @Autowired
     private ObjectMapper objectMapper;
+    @Autowired
+    private WebApplicationContext applicationContext;
 
     @BeforeAll
-    static void beforeAll(@Autowired WebApplicationContext applicationContext) {
+    static void beforeAll(WebApplicationContext applicationContext) {
         mockMvc = MockMvcBuilders
                 .webAppContextSetup(applicationContext)
                 .apply(springSecurity())
