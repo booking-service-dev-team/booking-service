@@ -32,7 +32,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
-import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
@@ -45,23 +44,20 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class AccommodationControllerTest extends AbstractIntegrationTest {
-    // todo change groupId
-
     private MockMvc mockMvc;
     @Autowired
     private DataSource dataSource;
     @Autowired
     private ObjectMapper objectMapper;
     @Autowired
-    private WebApplicationContext applicationContext;
+    private WebApplicationContext webApplicationContext;
 
     @SneakyThrows
     @BeforeEach
-    void initializeAccommodationsAndAddressesTables(TestInfo testInfo) {
+    void initialize(TestInfo testInfo) {
         mockMvc = MockMvcBuilders
-                .webAppContextSetup(applicationContext)
+                .webAppContextSetup(webApplicationContext)
                 .apply(springSecurity())
                 .build();
         if (testInfo.getTags().contains("IWantToInitialize")) {
