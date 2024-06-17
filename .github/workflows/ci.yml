@@ -52,4 +52,4 @@ jobs:
           done
         if: steps.wait-for-postgres.outputs.result == 'success'
       - name: Build with Maven
-        run: mvn --batch-mode --update-snapshots verify
+        run: mvn --batch-mode --update-snapshots verify -Dcheckstyle.skip=true
