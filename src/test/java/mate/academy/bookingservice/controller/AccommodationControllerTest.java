@@ -3,7 +3,8 @@ package mate.academy.bookingservice.controller;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.junit.jupiter.api.BeforeAll;
+import org.springframework.context.ApplicationContext;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -45,24 +46,27 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 public class AccommodationControllerTest extends AbstractIntegrationTest {
-    private MockMvc mockMvc;
+
+
+
+    private static MockMvc mockMvc;
     @Autowired
     private DataSource dataSource;
     @Autowired
     private ObjectMapper objectMapper;
-    @Autowired
-    private WebApplicationContext webApplicationContext;
 
 
+    @BeforeAll
+    static void beforeAll(@Autowired ApplicationContext applicationContext) {
+        mockMvc = MockMvcBuilders
+                .webAppContextSetup((WebApplicationContext) applicationContext)
+                .apply(springSecurity())
+                .build();
+    }
     @SneakyThrows
     @BeforeEach
     void initialize(TestInfo testInfo) {
-        mockMvc = MockMvcBuilders
-                .webAppContextSetup(webApplicationContext)
-                .apply(springSecurity())
-                .build();
         if (testInfo.getTags().contains("IWantToInitialize")) {
             try (Connection connection = dataSource.getConnection()) {
                 connection.setAutoCommit(true);
