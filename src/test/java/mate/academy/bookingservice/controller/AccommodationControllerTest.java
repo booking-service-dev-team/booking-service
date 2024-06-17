@@ -1,14 +1,10 @@
 package mate.academy.bookingservice.controller;
 
-import mate.academy.bookingservice.config.TestContainersConfig;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -47,13 +43,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
-import org.testcontainers.containers.PostgreSQLContainer;
 
-@ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = { TestContainersConfig.class })
-@ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class AccommodationControllerTest {
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+public class AccommodationControllerTest extends AbstractIntegrationTest {
     private MockMvc mockMvc;
     @Autowired
     private DataSource dataSource;
@@ -61,8 +54,6 @@ public class AccommodationControllerTest {
     private ObjectMapper objectMapper;
     @Autowired
     private WebApplicationContext webApplicationContext;
-//    @Autowired
-//    private PostgreSQLContainer<?> postgreSqlContainer;
 
 
     @SneakyThrows
